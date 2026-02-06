@@ -1,0 +1,27 @@
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Build artifacts
+build/
+bin/
+obj/
+out/
+.gradle/
+
+# Dependencies
+node_modules/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# Secrets and Local Config
+.env
+local.properties
+
+# Logs
+*.log
+
