@@ -2,7 +2,7 @@ const Product = require('../models/Product');
 
 exports.createProduct = async (req, res) => {
     try {
-        const { name, description, category, condition, allowBuy, allowRent, allowDonate, price, rentPrice, allowReturn, sellerId } = req.body;
+        const { name, description, category, condition, allowBuy, allowRent, allowDonate, allowAuction, price, rentPrice, allowReturn, sellerId } = req.body;
 
         // Handle files
         // req.files is an object with arrays if using multer fields
@@ -10,7 +10,19 @@ exports.createProduct = async (req, res) => {
         let imageUrls = [];
         let videoUrl = '';
 
-        if (req.files && req.files.images) {
+        // Check if imageUrls is sent in body (Supabase integration)
+        if (req.body.imageUrls) {
+            try {
+                // If sent as multipart field, it might be a stringified JSON
+                imageUrls = typeof req.body.imageUrls === 'string' ? JSON.parse(req.body.imageUrls) : req.body.imageUrls;
+            } catch (e) {
+                console.error("Error parsing imageUrls:", e);
+                imageUrls = [];
+            }
+        }
+
+        // Fallback or legacy file upload
+        if (imageUrls.length === 0 && req.files && req.files.images) {
             imageUrls = req.files.images.map(file => file.path);
         }
 
@@ -27,6 +39,7 @@ exports.createProduct = async (req, res) => {
             allowRent: allowRent === 'true',
             allowDonate: allowDonate === 'true',
             allowReturn: allowReturn === 'true',
+            allowAuction: allowAuction === 'true',
             price: price ? Number(price) : 0,
             rentPrice: rentPrice ? Number(rentPrice) : 0,
             images: imageUrls,

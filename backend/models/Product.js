@@ -30,12 +30,11 @@ const productSchema = new mongoose.Schema({
 
     // Locking Mechanism
     isLocked: { type: Boolean, default: false },
-    lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    lockedBy: { type: String, required: false }, // Changed to String for Supabase UUID
     lockExpiresAt: { type: Date },
 
     seller: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        type: String, // Changed to String for Supabase UUID
         required: true
     },
 
