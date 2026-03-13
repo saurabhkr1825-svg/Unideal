@@ -1,35 +1,36 @@
 class User {
   final String id;
-  final String userId;
+  final String uniqueCode;
+  final String fullName;
+  final String? phone;
   final String email;
   final String role;
-  final int walletBalance;
+  final bool membershipStatus;
+  final DateTime? membershipExpiry;
 
   User({
     required this.id,
-    required this.userId,
+    required this.uniqueCode,
+    required this.fullName,
+    this.phone,
     required this.email,
     required this.role,
-    this.walletBalance = 0,
+    this.membershipStatus = false,
+    this.membershipExpiry,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
+  factory User.fromJson(Map<String, dynamic> json, String email) {
     return User(
       id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      email: json['email'] ?? '',
+      uniqueCode: json['unique_code'] ?? '',
+      fullName: json['full_name'] ?? '',
+      phone: json['phone'],
+      email: email,
       role: json['role'] ?? 'user',
-      walletBalance: json['walletBalance'] ?? 0,
+      membershipStatus: json['membership_status'] ?? false,
+      membershipExpiry: json['membership_expiry'] != null 
+          ? DateTime.parse(json['membership_expiry']) 
+          : null,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'userId': userId,
-      'email': email,
-      'role': role,
-      'walletBalance': walletBalance,
-    };
   }
 }

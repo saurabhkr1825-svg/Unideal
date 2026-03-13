@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/auction_provider.dart';
+import '../widgets/custom_buttons.dart';
 
 class SellItemScreen extends StatefulWidget {
   @override
@@ -12,35 +14,30 @@ class SellItemScreen extends StatefulWidget {
 
 class _SellItemScreenState extends State<SellItemScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
-  final _rentPriceController = TextEditingController();
-  
+  String _listingType = 'Donate'; // Donate, Sell, Auction
   String _category = 'Electronics';
   String _condition = 'Good';
-  
-  bool _allowBuy = true;
-  bool _allowRent = false;
-  bool _allowDonate = false;
-  bool _allowReturn = false;
+  int _auctionDurationHours = 24;
 
-  List<File> _selectedImages = [];
+  File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImages() async {
-    final List<XFile>? images = await _picker.pickMultiImage();
-    if (images != null) {
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (image != null) {
       setState(() {
-        _selectedImages.addAll(images.map((x) => File(x.path)).take(4 - _selectedImages.length));
+        _selectedImage = File(image.path);
       });
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please add at least 1 image')));
+    if (_selectedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please upload a product photo'), backgroundColor: Colors.orange));
       return;
     }
 
@@ -48,152 +45,267 @@ class _SellItemScreenState extends State<SellItemScreen> {
     if (user == null) return;
 
     try {
-      await Provider.of<ProductProvider>(context, listen: false).uploadProduct(
-        name: _nameController.text,
-        description: _descController.text,
+      final double priceVal = _listingType == 'Sell' || _listingType == 'Auction' 
+          ? double.tryParse(_priceController.text) ?? 50.0 
+          : 0.0;
+
+      final productId = await Provider.of<ProductProvider>(context, listen: false).uploadProduct(
+        title: _titleController.text.trim(),
+        description: _descController.text.trim(),
         category: _category,
         condition: _condition,
-        price: double.tryParse(_priceController.text) ?? 0,
-        rentPrice: double.tryParse(_rentPriceController.text) ?? 0,
-        allowBuy: _allowBuy,
-        allowRent: _allowRent,
-        allowDonate: _allowDonate,
-        allowReturn: _allowReturn,
-        sellerId: user.id, // MongoDB ID
-        images: _selectedImages,
+        donorId: user.id, 
+        image: _selectedImage!,
+        isAuction: _listingType == 'Auction',
+        price: priceVal,
       );
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product Listed for Approval!')));
-      Navigator.of(context).pop(); // Go back to home
+      
+      if (_listingType == 'Auction') {
+        await Provider.of<AuctionProvider>(context, listen: false).createAuction(
+          itemId: productId,
+          sellerId: user.id,
+          startingPrice: priceVal,
+          durationHours: _auctionDurationHours,
+        );
+      }
+      
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Icon(Icons.check_circle, color: Colors.green, size: 60),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Success!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              Text('Your item has been listed and is pending review.', textAlign: TextAlign.center),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pop();
+              },
+              child: Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+            )
+          ],
+        ),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload Failed: $e'), backgroundColor: Colors.red));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sell Item')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('List an Item', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Product Photos (Max 4)', style: TextStyle(color: Colors.white, fontSize: 16)),
-              SizedBox(height: 10),
-              Row(
-                children: [
-                  ..._selectedImages.map((f) => Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Image.file(f, width: 70, height: 70, fit: BoxFit.cover),
-                  )),
-                  if (_selectedImages.length < 4)
-                    IconButton(
-                      icon: Icon(Icons.add_a_photo, color: Colors.purpleAccent, size: 30),
-                      onPressed: _pickImages,
-                    ),
-                ],
-              ),
-              SizedBox(height: 20),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Product Name', filled: true, fillColor: Colors.white10),
-                style: TextStyle(color: Colors.white),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _descController,
-                decoration: InputDecoration(labelText: 'Description', filled: true, fillColor: Colors.white10),
-                style: TextStyle(color: Colors.white),
-                maxLines: 3,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _category,
-                dropdownColor: Colors.grey[900],
-                items: ['Electronics', 'Books', 'Furniture', 'Clothing', 'Other']
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c, style: TextStyle(color: Colors.white))))
-                    .toList(),
-                onChanged: (v) => setState(() => _category = v!),
-                decoration: InputDecoration(labelText: 'Category', filled: true, fillColor: Colors.white10),
-              ),
-              SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: _condition,
-                dropdownColor: Colors.grey[900],
-                items: ['New', 'Good', 'Fair', 'Poor']
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c, style: TextStyle(color: Colors.white))))
-                    .toList(),
-                onChanged: (v) => setState(() => _condition = v!),
-                decoration: InputDecoration(labelText: 'Condition', filled: true, fillColor: Colors.white10),
-              ),
-              SizedBox(height: 20),
-              CheckboxListTile(
-                title: Text('Allow Buy', style: TextStyle(color: Colors.white)),
-                value: _allowBuy,
-                onChanged: (v) => setState(() => _allowBuy = v!),
-                controlAffinity: ListTileControlAffinity.leading,
-                checkColor: Colors.black,
-                activeColor: Colors.green,
-              ),
-              if (_allowBuy)
-                TextFormField(
-                  controller: _priceController,
-                  decoration: InputDecoration(labelText: 'Selling Price (₹)', filled: true, fillColor: Colors.white10),
-                   style: TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+              // Photo Upload Section
+              Text('Product Photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 12),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.indigo.withOpacity(0.1), width: 2),
+                  ),
+                  child: _selectedImage != null
+                      ? ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(_selectedImage!, fit: BoxFit.cover))
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate_outlined, color: Colors.indigo, size: 50),
+                            SizedBox(height: 8),
+                            Text('Tap to select photo', style: TextStyle(color: Colors.indigo[300])),
+                          ],
+                        ),
                 ),
-              SizedBox(height: 10),
-              CheckboxListTile(
-                title: Text('Allow Rent', style: TextStyle(color: Colors.white)),
-                value: _allowRent,
-                onChanged: (v) => setState(() => _allowRent = v!),
-                controlAffinity: ListTileControlAffinity.leading,
-                checkColor: Colors.black,
-                 activeColor: Colors.orange,
-              ),
-              if (_allowRent)
-                TextFormField(
-                  controller: _rentPriceController,
-                  decoration: InputDecoration(labelText: 'Rent Price Per Day (₹)', filled: true, fillColor: Colors.white10),
-                   style: TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
-                ),
-               SizedBox(height: 10),
-              CheckboxListTile(
-                title: Text('Allow Donate', style: TextStyle(color: Colors.white)),
-                value: _allowDonate,
-                onChanged: (v) => setState(() => _allowDonate = v!),
-                controlAffinity: ListTileControlAffinity.leading,
-                checkColor: Colors.black,
-                activeColor: Colors.blue,
               ),
               SizedBox(height: 30),
-               Consumer<ProductProvider>(
-                    builder: (context, product, _) => product.isLoading
-                        ? Center(child: CircularProgressIndicator(color: Colors.purpleAccent))
-                        : SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _submit,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purpleAccent,
-                                padding: EdgeInsets.all(15),
-                              ),
-                              child: Text('SUBMIT FOR APPROVAL', style: TextStyle(fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                  ),
 
+              // Form Fields
+              _buildSectionTitle('Basic Information'),
+              _buildTextField(
+                controller: _titleController,
+                label: 'Item Title',
+                hint: 'e.g. Scientific Calculator, Engineering Books',
+              ),
+              SizedBox(height: 16),
+              _buildTextField(
+                controller: _descController,
+                label: 'Description',
+                hint: 'Tell us more about the item...',
+                maxLines: 4,
+              ),
+              SizedBox(height: 24),
+
+              _buildSectionTitle('Details'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown(
+                      label: 'Category',
+                      value: _category,
+                      items: ['Electronics', 'Books', 'Furniture', 'Clothing', 'Other'],
+                      onChanged: (v) => setState(() => _category = v!),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown(
+                      label: 'Condition',
+                      value: _condition,
+                      items: ['New', 'Good', 'Fair', 'Poor'],
+                      onChanged: (v) => setState(() => _condition = v!),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 24),
+
+              _buildSectionTitle('Listing Type'),
+              Row(
+                children: ['Donate', 'Sell', 'Auction'].map((type) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: ChoiceChip(
+                      label: Text(type),
+                      selected: _listingType == type,
+                      onSelected: (val) => setState(() => _listingType = type),
+                      selectedColor: Colors.indigo,
+                      labelStyle: TextStyle(color: _listingType == type ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                )).toList(),
+              ),
+              if (_listingType != 'Donate')
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: _buildTextField(
+                    controller: _priceController,
+                    label: _listingType == 'Auction' ? 'Starting Price (₹)' : 'Price (₹)',
+                    hint: _listingType == 'Auction' ? 'Minimum bid amount' : 'Fixed price for the item',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              if (_listingType == 'Auction') ...[
+                SizedBox(height: 16),
+                _buildDropdown(
+                  label: 'Auction Duration',
+                  value: '$_auctionDurationHours Hours',
+                  items: ['1 Hours', '6 Hours', '24 Hours'],
+                  onChanged: (v) {
+                    setState(() {
+                      _auctionDurationHours = int.parse(v!.split(' ')[0]);
+                    });
+                  },
+                ),
+                SizedBox(height: 12),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.purple.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.gavel_outlined, color: Colors.purple, size: 20),
+                      SizedBox(width: 8),
+                      Text('Highest bidder will receive the item', style: TextStyle(color: Colors.purple[700], fontSize: 13, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+              ],
+              SizedBox(height: 40),
+
+              // Submit Button
+              Consumer<ProductProvider>(
+                builder: (context, product, _) => product.isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : SizedBox(
+                        width: double.infinity,
+                        child: PrimaryButton(
+                          onPressed: _submit,
+                          text: 'LIST ITEM',
+                        ),
+                      ),
+              ),
+              SizedBox(height: 20),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller, 
+    required String label, 
+    String? hint, 
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      ),
+      validator: (v) => v!.isEmpty ? '$label is required' : null,
+    );
+  }
+
+  Widget _buildDropdown({required String label, required String value, required List<String> items, required Function(String?) onChanged}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.bold)),
+        SizedBox(height: 8),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,65 +1,73 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../services/product_service.dart';
+import '../services/supabase_product_service.dart';
+import '../services/supabase_storage_service.dart';
 import '../models/product_model.dart';
 
 class ProductProvider with ChangeNotifier {
-  final ProductService _productService = ProductService();
+  final SupabaseProductService _productService = SupabaseProductService();
+  final SupabaseStorageService _storageService = SupabaseStorageService();
   List<Product> _products = [];
   bool _isLoading = false;
 
   List<Product> get products => _products;
   bool get isLoading => _isLoading;
 
-  Future<void> fetchProducts({String category = '', String search = ''}) async {
+  Future<void> fetchProducts({
+    String category = '',
+    String search = '',
+    double? minPrice,
+    double? maxPrice,
+    String? condition,
+    String? itemType,
+  }) async {
     _setLoading(true);
     try {
-      final data = await _productService.fetchProducts(category: category, search: search);
-      _products = data.map((item) => Product.fromJson(item)).toList();
+      _products = await _productService.fetchProducts(
+        category: category,
+        search: search,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        condition: condition,
+        itemType: itemType,
+      );
       notifyListeners();
     } catch (e) {
       print(e);
-      // Handle error
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<void> uploadProduct({
-    required String name,
+  Future<String> uploadProduct({
+    required String title,
     required String description,
     required String category,
     required String condition,
-    required double price,
-    required double rentPrice,
-    required bool allowBuy,
-    required bool allowRent,
-    required bool allowDonate,
-    required bool allowReturn,
-    required String sellerId,
-    required List<File> images,
-    File? video,
+    required String donorId,
+    required File image,
+    required bool isAuction,
+    double price = 0.0,
   }) async {
     _setLoading(true);
     try {
-      await _productService.uploadProduct(
-        name: name,
+      // 1. Upload Image
+      final imageUrl = await _storageService.uploadDonationImage(image);
+
+      // 2. Create Donation
+      final productId = await _productService.uploadProduct(
+        title: title,
         description: description,
         category: category,
         condition: condition,
+        donorId: donorId,
+        imageUrl: imageUrl,
+        isAuction: isAuction,
         price: price,
-        rentPrice: rentPrice,
-        allowBuy: allowBuy,
-        allowRent: allowRent,
-        allowDonate: allowDonate,
-        allowReturn: allowReturn,
-        sellerId: sellerId,
-        images: images,
-        video: video,
-        token: '', // Add token if needed
       );
-      // Refresh list
+      
       await fetchProducts(); 
+      return productId;
     } catch (e) {
       rethrow;
     } finally {
@@ -67,10 +75,19 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  Future<void> lockProduct(String productId, String userId) async {
-    // Don't set loading here to avoid full screen loader, or handle gracefully
+  Future<void> updateAvailability(String donationId, bool isAvailable) async {
     try {
-      await _productService.lockProduct(productId, userId);
+      await _productService.updateAvailability(donationId, isAvailable);
+      await fetchProducts();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateProductStatus(String productId, String status) async {
+    try {
+      await _productService.updateProductStatus(productId, status);
+      await fetchProducts();
     } catch (e) {
       rethrow;
     }

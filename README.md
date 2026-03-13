@@ -1,75 +1,51 @@
 # Unideal - P2P Marketplace
 
-Unideal is a Peer-to-Peer (P2P) marketplace application designed to facilitate buying, selling, and auctioning items directly between users. The system comprises a robust Node.js backend and a cross-platform Flutter mobile application.
+Unideal is a modern Peer-to-Peer (P2P) marketplace application designed to facilitate buying, selling, and auctioning items directly between users. The system leverages a powerful **Flutter** mobile application and a scalable **Supabase** backend.
 
-## Project Structure
+## 🚀 Project Overview
 
-The project is organized into two main directories:
+The project is structured to ensure high performance and ease of development:
 
-- **`backend/`**: Contains the RESTful API server built with Node.js, Express, and MongoDB.
-- **`mobile_app/`**: Contains the client-side mobile application built with Flutter.
+- **`mobile_app/`**: The core Flutter application for Android and iOS.
+- **`unidealsupa/`**: Supabase configuration, migrations, and edge functions.
+- **`backend/`**: (Legacy) Original Node.js/MongoDB API (being migrated to Supabase).
 
-## Features
+## ✨ Features
 
-- **User Authentication**: Secure sign-up and login functionality using JWT.
-- **Marketplace Listings**: Users can post items for sale with details and images.
-- **Auctions**: Support for auctioning items with bidding capabilities.
-- **Image Management**: Integration with Cloudinary for efficient image storage and retrieval.
-- **QR Code Integration**: Uses `qr_flutter` for generating/scanning QR codes, likely for verifying transactions or profile sharing.
+- **User Authentication**: Secure authentication powered by Supabase Auth (JWT).
+- **Marketplace Listings**: Real-time item listings with seamless image uploads.
+- **Dynamic Auctions**: Interactive bidding system for auction-style selling.
+- **Smart Transactions**: QR code integration for secure transaction verification.
+- **Rich UI**: Smooth animations and a premium interface using `flutter_animate`.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MongoDB (with Mongoose)
-- **Authentication**: JSON Web Tokens (JWT) & bcryptjs
-- **File Storage**: Cloudinary (via `multer-storage-cloudinary`)
+### Backend & Infrastructure
+- **Platform**: Supabase
+- **Database**: PostgreSQL (with Realtime capabilities)
+- **Authentication**: Supabase Auth
+- **Storage**: Supabase Storage (Original migration from Cloudinary)
 
 ### Mobile App
 - **Framework**: Flutter (Dart)
 - **State Management**: Provider
-- **Networking**: http
-- **Local Storage**: shared_preferences
+- **Networking**: `supabase_flutter` & `http`
+- **Animations**: `flutter_animate`
 
-## Getting Started
+## 🌿 Git Workflow
+
+We follow a professional branching strategy to maintain code quality. Please refer to [CONTRIBUTING.md](file:///d:/Unideal/CONTRIBUTING.md) for full details.
+
+- **`main`**: Production-ready code.
+- **`develop`**: Main integration branch for development.
+- **`feature/*`**: Individual features (e.g., `feature/chat-system`).
+- **`bugfix/*`**: Urgent or minor bug fixes.
+
+## 🏁 Getting Started
 
 ### Prerequisites
-- Node.js (v16+ recommended)
-- Flutter SDK (3.0.0+)
-- MongoDB instance (Local or Atlas)
-
-### Backend Setup
-
-1.  Navigate to the backend directory:
-    ```bash
-    cd backend
-    ```
-
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-
-3.  Configure Environment Variables:
-    Create a `.env` file in the `backend/` directory with the following keys:
-    ```env
-    PORT=5000
-    MONGO_URI=<your_mongodb_connection_string>
-    JWT_SECRET=<your_jwt_secret>
-    CLOUDINARY_CLOUD_NAME=<your_cloud_name>
-    CLOUDINARY_API_KEY=<your_api_key>
-    CLOUDINARY_API_SECRET=<your_api_secret>
-    ```
-
-4.  Start the server:
-    ```bash
-    # For development (with nodemon)
-    npm run dev
-    
-    # For production
-    npm start
-    ```
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.0.0+)
+- [Supabase CLI](https://supabase.com/docs/guides/cli) (optional, for local development)
 
 ### Mobile App Setup
 
@@ -83,13 +59,14 @@ The project is organized into two main directories:
     flutter pub get
     ```
 
-3.  Run the application:
-    Make sure you have a connected device or running emulator.
+3.  Configure Environment:
+    Create/Update your Supabase configuration in `lib/main.dart` or your environment config file with your Project URL and Anon Key.
+
+4.  Run the application:
     ```bash
     flutter run
     ```
-    *Note: If connecting to a local backend from an Android emulator, ensure your API calls use `10.0.2.2` instead of `localhost`.*
 
-## License
+## 📄 License
 
-[Add License Information Here]
+This project is licensed under the [Add License Type] - see the LICENSE file for details.
