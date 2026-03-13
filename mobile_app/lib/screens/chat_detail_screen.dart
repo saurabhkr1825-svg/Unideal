@@ -4,13 +4,17 @@ import '../services/supabase_chat_service.dart';
 import '../providers/auth_provider.dart';
 import '../models/chat_model.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'membership_screen.dart';
+import '../widgets/custom_card.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserEmail;
   final String donationId;
   final String? donationTitle;
+  final String? donationImageUrl;
 
   const ChatDetailScreen({
     Key? key,
@@ -18,6 +22,7 @@ class ChatDetailScreen extends StatefulWidget {
     required this.otherUserEmail,
     required this.donationId,
     this.donationTitle,
+    this.donationImageUrl,
   }) : super(key: key);
 
   @override
@@ -28,13 +33,45 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final SupabaseChatService _chatService = SupabaseChatService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ImagePicker _picker = ImagePicker();
+  
   String? _chatId;
+  String _otherUserStatus = 'offline';
+  DateTime? _otherUserLastSeen;
+  bool _isOtherTyping = false;
+  RealtimeChannel? _typingChannel;
   static const int _messageLimit = 10;
 
   @override
   void initState() {
     super.initState();
     _initChat();
+    _chatService.updatePresence();
+    _subscribeToUserStatus();
+  }
+
+  @override
+  void dispose() {
+    _chatService.stopPresence();
+    _typingChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  void _subscribeToUserStatus() {
+    Supabase.instance.client
+        .from('profiles')
+        .stream(primaryKey: ['id'])
+        .eq('id', widget.otherUserId)
+        .listen((data) {
+          if (data.isNotEmpty && mounted) {
+            setState(() {
+              _otherUserStatus = data.first['online_status'] ?? 'offline';
+              _otherUserLastSeen = data.first['last_seen'] != null 
+                  ? DateTime.parse(data.first['last_seen']) 
+                  : null;
+            });
+          }
+        });
   }
 
   Future<void> _initChat() async {
@@ -44,12 +81,57 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         setState(() {
           _chatId = id;
         });
+        _setupTypingIndicator(id);
+        _chatService.markAsRead(id);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Chat is unavailable: $e')));
         Navigator.pop(context);
       }
+    }
+  }
+
+  void _setupTypingIndicator(String chatId) {
+    _typingChannel = _chatService.subscribeToTyping(chatId, (userId, isTyping) {
+      if (userId == widget.otherUserId && mounted) {
+        setState(() {
+          _isOtherTyping = isTyping;
+        });
+      }
+    });
+  }
+
+  void _onTypingChanged(String text) {
+    if (_chatId != null) {
+      _chatService.sendTypingIndicator(_chatId!, text.isNotEmpty);
+    }
+  }
+
+  Future<void> _pickImage(int sentCount, bool isMember) async {
+    if (!isMember && sentCount >= _messageLimit) {
+      _showLimitReachedDialog();
+      return;
+    }
+
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null || _chatId == null) return;
+
+    try {
+      // Show loading
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Uploading image...')));
+      
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final path = 'chat_images/$_chatId/$fileName';
+      
+      final bytes = await image.readAsBytes();
+      await Supabase.instance.client.storage.from('item-images').uploadBinary(path, bytes);
+      
+      final imageUrl = Supabase.instance.client.storage.from('item-images').getPublicUrl(path);
+      
+      await _chatService.sendMessage(_chatId!, '[Image]', type: 'image', imageUrl: imageUrl);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload: $e')));
     }
   }
 
@@ -90,20 +172,50 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text(widget.otherUserEmail, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            if (widget.donationTitle != null)
-              Text(
-                'Regarding: ${widget.donationTitle}',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Colors.white70),
+            CircleAvatar(
+              backgroundColor: Colors.white24,
+              child: Text(widget.otherUserEmail[0].toUpperCase(), style: TextStyle(color: Colors.white)),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.otherUserEmail, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  _otherUserStatus == 'online'
+                    ? Text('🟢 Online', style: TextStyle(fontSize: 11, color: Colors.greenAccent))
+                    : Text(
+                        _otherUserLastSeen != null 
+                          ? 'Last seen ${DateFormat('h:mm a').format(_otherUserLastSeen!)}'
+                          : 'Offline',
+                        style: TextStyle(fontSize: 11, color: Colors.white70),
+                      ),
+                ],
               ),
+            ),
           ],
         ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'report') {
+                _showReportDialog();
+              } else if (value == 'block') {
+                _showBlockDialog();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'report', child: Text('Report User')),
+              PopupMenuItem(value: 'block', child: Text('Block User')),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
+          _buildProductContext(),
           Expanded(
             child: _chatId == null 
               ? Center(child: CircularProgressIndicator())
@@ -140,6 +252,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             },
                           ),
                         ),
+                        if (_isOtherTyping)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'typing...',
+                                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.indigo),
+                              ),
+                            ),
+                          ),
+                        _buildQuickReplies(sentCount, isMember),
                         if (!isMember) _buildLimitIndicator(sentCount),
                         _buildMessageInput(sentCount, isMember),
                       ],
@@ -148,6 +272,64 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProductContext() {
+    if (widget.donationTitle == null) return SizedBox.shrink();
+    return Container(
+      padding: EdgeInsets.all(8),
+      color: Colors.grey[100],
+      child: Row(
+        children: [
+          if (widget.donationImageUrl != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(widget.donationImageUrl!, width: 40, height: 40, fit: BoxFit.cover),
+            ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.donationTitle!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('Interested in this item', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Navigate back to product detail or show dialog
+            },
+            child: Text('View Item', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickReplies(int sentCount, bool isMember) {
+    if (!isMember && sentCount >= _messageLimit) return SizedBox.shrink();
+    final replies = ['Is this available?', 'Final price?', 'Where can we meet?'];
+    return Container(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 12),
+        itemCount: replies.length,
+        itemBuilder: (context, i) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ActionChip(
+              label: Text(replies[i], style: TextStyle(fontSize: 12)),
+              onPressed: () {
+                _messageController.text = replies[i];
+                _sendMessage(sentCount, isMember);
+              },
+            ),
+          );
+        },
       ),
     );
   }
@@ -200,16 +382,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 bottomRight: isMe ? Radius.circular(0) : Radius.circular(16),
               ),
             ),
-            child: Text(
-              msg.message,
-              style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 16),
-            ),
+            child: msg.messageType == 'image' && msg.imageUrl != null
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(msg.imageUrl!, width: 200, fit: BoxFit.contain),
+                    ),
+                    if (msg.message != '[Image]')
+                      Text(
+                        msg.message,
+                        style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 16),
+                      ),
+                  ],
+                )
+              : Text(
+                  msg.message,
+                  style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 16),
+                ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              time,
-              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  time,
+                  style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                ),
+                if (isMe) ...[
+                  SizedBox(width: 4),
+                  Icon(
+                    msg.status == 'read' ? Icons.done_all : Icons.done,
+                    size: 12,
+                    color: msg.status == 'read' ? Colors.blue : Colors.grey[500],
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -251,9 +461,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    onChanged: _onTypingChanged,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
+                      prefixIcon: IconButton(
+                        icon: Icon(Icons.attach_file, color: Colors.indigo),
+                        onPressed: () => _pickImage(sentCount, isMember),
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
@@ -293,6 +508,68 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => MembershipScreen()));
             }, 
             child: Text('Upgrade Now')
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Report User'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: 'Reason for reporting...'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final user = Supabase.instance.client.auth.currentUser;
+              if (user != null && controller.text.isNotEmpty) {
+                await Supabase.instance.client.from('user_reports').insert({
+                  'reporter_id': user.id,
+                  'reported_id': widget.otherUserId,
+                  'reason': controller.text,
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report submitted.')));
+              }
+            },
+            child: Text('Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBlockDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Block User?'),
+        content: Text('You will no longer receive messages from this user.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              final user = Supabase.instance.client.auth.currentUser;
+              if (user != null) {
+                await Supabase.instance.client.from('blocked_users').insert({
+                  'blocker_id': user.id,
+                  'blocked_id': widget.otherUserId,
+                });
+                Navigator.pop(context);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User blocked.')));
+              }
+            },
+            child: Text('Block', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

@@ -4,6 +4,68 @@ import 'supabase_notification_service.dart';
 
 class SupabaseChatService {
   final SupabaseClient _client = Supabase.instance.client;
+  RealtimeChannel? _presenceChannel;
+
+  // Manage Presence (Online/Offline)
+  void updatePresence() {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    _presenceChannel = _client.channel('presence:online_users');
+
+    _presenceChannel!.onPresenceSync((payload) {
+      // Local sync if needed
+    }).onPresenceJoin((payload) {
+      // User joined
+    }).onPresenceLeave((payload) async {
+      // User left - we can update the profiles table here or via a Hook
+    }).subscribe((status, [error]) async {
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        await _presenceChannel!.track({
+          'user_id': user.id,
+          'online_at': DateTime.now().toIso8601String(),
+        });
+        
+        // Update profiles table for persistence
+        await _client.from('profiles').update({
+          'online_status': 'online',
+          'last_seen': DateTime.now().toIso8601String(),
+        }).eq('id', user.id);
+      }
+    });
+  }
+
+  void stopPresence() async {
+    final user = _client.auth.currentUser;
+    if (user != null) {
+      await _client.from('profiles').update({
+        'online_status': 'offline',
+        'last_seen': DateTime.now().toIso8601String(),
+      }).eq('id', user.id);
+    }
+    await _presenceChannel?.unsubscribe();
+  }
+
+  // Typing Indicators
+  RealtimeChannel subscribeToTyping(String chatId, Function(String userId, bool isTyping) onTyping) {
+    final channel = _client.channel('chat:$chatId');
+    
+    channel.onBroadcast(event: 'typing', callback: (payload) {
+      onTyping(payload['user_id'], payload['is_typing']);
+    }).subscribe();
+
+    return channel;
+  }
+
+  void sendTypingIndicator(String chatId, bool isTyping) {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    _client.channel('chat:$chatId').sendBroadcast(
+      event: 'typing',
+      payload: {'user_id': user.id, 'is_typing': isTyping},
+    );
+  }
 
   // Find or create a chat between two users for a specific donation
   Future<String> getOrCreateChat(String otherUserId, String donationId) async {
@@ -34,7 +96,7 @@ class SupabaseChatService {
   }
 
   // Send a message
-  Future<void> sendMessage(String chatId, String content) async {
+  Future<void> sendMessage(String chatId, String content, {String type = 'text', String? imageUrl}) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
 
@@ -42,6 +104,9 @@ class SupabaseChatService {
       'chat_id': chatId,
       'sender_id': user.id,
       'message': content,
+      'message_type': type,
+      'image_url': imageUrl,
+      'status': 'sent',
     });
 
     // 2. Create Notification for the receiver
@@ -62,6 +127,19 @@ class SupabaseChatService {
     } catch (e) {
       print('Failed to send notification: $e');
     }
+  }
+
+  // Mark messages as read
+  Future<void> markAsRead(String chatId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    await _client
+        .from('messages')
+        .update({'status': 'read', 'read_at': DateTime.now().toIso8601String()})
+        .eq('chat_id', chatId)
+        .neq('sender_id', user.id)
+        .neq('status', 'read');
   }
 
   // Get messages for a specific chat (realtime stream)
@@ -89,9 +167,11 @@ class SupabaseChatService {
           sender_id,
           receiver_id,
           created_at,
+          last_message,
+          last_message_at,
           donations:donation_id(title, image_url),
-          profiles_sender:sender_id(full_name),
-          profiles_receiver:receiver_id(full_name)
+          profiles_sender:sender_id(full_name, online_status, last_seen),
+          profiles_receiver:receiver_id(full_name, online_status, last_seen)
         ''')
         .or('sender_id.eq.${user.id},receiver_id.eq.${user.id}')
         .order('created_at', ascending: false);

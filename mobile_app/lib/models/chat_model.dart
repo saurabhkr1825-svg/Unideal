@@ -9,6 +9,8 @@ class ChatRoom {
   final String otherUserName;
   final String? lastMessage;
   final DateTime? lastMessageAt;
+  final String otherUserStatus;
+  final DateTime? otherUserLastSeen;
 
   ChatRoom({
     required this.id,
@@ -19,6 +21,8 @@ class ChatRoom {
     required this.otherUserName,
     this.lastMessage,
     this.lastMessageAt,
+    this.otherUserStatus = 'offline',
+    this.otherUserLastSeen,
   });
 
   factory ChatRoom.fromMap(Map<String, dynamic> map, String currentUserId) {
@@ -41,8 +45,10 @@ class ChatRoom {
       donationImageUrl: donation['image_url'],
       otherUserId: otherUserId,
       otherUserName: otherUserName,
-      lastMessage: map['last_message'], // This might need a separate query or join if not available directly
+      lastMessage: map['last_message'],
       lastMessageAt: map['last_message_at'] != null ? DateTime.parse(map['last_message_at']) : null,
+      otherUserStatus: otherUserProfile['online_status'] ?? 'offline',
+      otherUserLastSeen: otherUserProfile['last_seen'] != null ? DateTime.parse(otherUserProfile['last_seen']) : null,
     );
   }
 }
@@ -50,9 +56,11 @@ class ChatRoom {
 class ChatMessage {
   final String id;
   final String chatId;
-  final String senderId;
   final String message;
   final DateTime sentAt;
+  final String status; // sent, delivered, read
+  final String messageType; // text, image
+  final String? imageUrl;
 
   ChatMessage({
     required this.id,
@@ -60,6 +68,9 @@ class ChatMessage {
     required this.senderId,
     required this.message,
     required this.sentAt,
+    this.status = 'sent',
+    this.messageType = 'text',
+    this.imageUrl,
   });
 
   factory ChatMessage.fromMap(Map<String, dynamic> map) {
@@ -67,8 +78,11 @@ class ChatMessage {
       id: map['id'],
       chatId: map['chat_id'],
       senderId: map['sender_id'],
-      message: map['message'],
+      message: map['message'] ?? '',
       sentAt: DateTime.parse(map['sent_at']),
+      status: map['status'] ?? 'sent',
+      messageType: map['message_type'] ?? 'text',
+      imageUrl: map['image_url'],
     );
   }
 
@@ -77,6 +91,9 @@ class ChatMessage {
       'chat_id': chatId,
       'sender_id': senderId,
       'message': message,
+      'status': status,
+      'message_type': messageType,
+      'image_url': imageUrl,
     };
   }
 }
