@@ -74,22 +74,40 @@ class _ChatListScreenState extends State<ChatListScreen> {
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: Hero(
               tag: 'chat-avatar-${room.id}',
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: room.donationImageUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(room.donationImageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                  color: Colors.indigo[50],
-                ),
-                child: room.donationImageUrl == null
-                    ? Icon(Icons.volunteer_activism, color: Colors.indigo)
-                    : null,
+              child: Stack(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: room.donationImageUrl != null
+                          ? DecorationImage(
+                              image: NetworkImage(room.donationImageUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                      color: Colors.indigo[50],
+                    ),
+                    child: room.donationImageUrl == null
+                        ? Icon(Icons.volunteer_activism, color: Colors.indigo)
+                        : null,
+                  ),
+                  if (room.otherUserStatus == 'online')
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             title: Text(
@@ -122,6 +140,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     otherUserEmail: room.otherUserName,
                     donationId: room.donationId,
                     donationTitle: room.donationTitle,
+                    donationImageUrl: room.donationImageUrl,
                   ),
                 ),
               );
