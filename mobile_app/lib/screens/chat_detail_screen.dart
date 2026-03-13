@@ -232,25 +232,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     final messages = snapshot.data!;
                     final sentCount = messages.where((m) => m.senderId == myId).length;
                     
-                    if (messages.isEmpty) {
-                      return Center(child: Text('No messages yet. Say Hi!'));
-                    }
-
                     // Schedule scroll to bottom after build
-                    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                    if (messages.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                    }
 
                     return Column(
                       children: [
                         Expanded(
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            padding: EdgeInsets.all(16),
-                            itemCount: messages.length,
-                            itemBuilder: (ctx, i) {
-                              final msg = messages[i];
-                              return _buildMessageBubble(msg, myId);
-                            },
-                          ),
+                          child: messages.isEmpty
+                            ? Center(child: Text('No messages yet. Say Hi!'))
+                            : ListView.builder(
+                                controller: _scrollController,
+                                padding: EdgeInsets.all(16),
+                                itemCount: messages.length,
+                                itemBuilder: (ctx, i) {
+                                  final msg = messages[i];
+                                  return _buildMessageBubble(msg, myId);
+                                },
+                              ),
                         ),
                         if (_isOtherTyping)
                           Padding(
