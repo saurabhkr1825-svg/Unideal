@@ -3,24 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
-import '../providers/order_provider.dart';
+import '../providers/transaction_provider.dart';
+import '../providers/product_provider.dart';
 import '../models/product_model.dart';
+import '../utils/constants.dart';
+import 'package:flutter/services.dart';
 import 'home_screen.dart';
+import 'transaction_success_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Product product;
-  final String type; // 'buy' or 'rent'
-  final DateTime? startDate;
-  final DateTime? endDate;
+  final String type;
+  final double? finalPriceOverride;
 
   const PaymentScreen({
     Key? key,
     required this.product,
     required this.type,
-    this.startDate,
-    this.endDate,
+    this.finalPriceOverride,
   }) : super(key: key);
 
   @override
@@ -31,172 +33,378 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _isProcessing = false;
   File? _proofImage;
   final _picker = ImagePicker();
+  final _utrController = TextEditingController();
+
+  @override
+  void dispose() {
+    _utrController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
-      setState(() {
-        _proofImage = File(pickedFile.path);
-      });
+      setState(() => _proofImage = File(pickedFile.path));
     }
   }
 
-  double get _totalAmount {
-    if (widget.type == 'rent' && widget.startDate != null && widget.endDate != null) {
-      final days = widget.endDate!.difference(widget.startDate!).inDays + 1;
-      return widget.product.rentPrice! * days;
+  Future<String?> _uploadProof(File image) async {
+    try {
+      final fileName = 'proof_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final path = 'payment_proofs/$fileName';
+
+      await Supabase.instance.client.storage.from('donations').upload(
+        path,
+        image,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+
+      return Supabase.instance.client.storage.from('donations').getPublicUrl(path);
+    } catch (e) {
+      debugPrint("Upload failed: $e");
+      return null;
     }
-    return widget.product.price!;
+  }
+
+  Future<void> _confirmPayment() async {
+    if (_proofImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please upload a screenshot of your payment')));
+      return;
+    }
+    if (_utrController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter your Transaction ID / UTR number')));
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final user = Provider.of<AuthProvider>(context, listen: false).user;
+      if (user == null) throw Exception('Session expired. Please login again.');
+
+      final proofUrl = await _uploadProof(_proofImage!);
+      
+      final paymentAmount = widget.type == 'membership' ? 99.0 : (widget.finalPriceOverride ?? widget.product.price);
+
+      final tx = await Provider.of<TransactionProvider>(context, listen: false).createTransaction(
+        userId: user.id,
+        donationId: widget.product.id,
+        amount: paymentAmount,
+        type: widget.type == 'membership' ? 'membership' : 'donation_request',
+        paymentRef: proofUrl ?? 'REF_${DateTime.now().millisecondsSinceEpoch}',
+        utrNumber: _utrController.text.trim(),
+        sellerId: widget.product.donorId,
+      );
+
+      // Update product status to reserved if it's a purchase/donation request
+      if (widget.type != 'membership') {
+        await Provider.of<ProductProvider>(context, listen: false).updateProductStatus(widget.product.id, 'reserved');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment details submitted successfully!')),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TransactionSuccessScreen(
+            amount: paymentAmount,
+            itemTitle: widget.type == 'membership' ? 'Unideal Membership' : widget.product.title,
+            transaction: tx,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request Failed: $e'), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final amount = _totalAmount;
-    // Mock UPI ID
-    final upiData = 'upi://pay?pa=admin@unideal&pn=Unideal&am=$amount&tn=${widget.product.name}';
-    
     return Scaffold(
-      appBar: AppBar(title: Text('Pay via UPI')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('Confirm Transaction', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+      ),
       body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              Text('Scan QR to Pay', style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
-              SizedBox(height: 10),
-              Text('Amount: ₹$amount', style: TextStyle(fontSize: 20, color: Colors.greenAccent)),
-              if (widget.type == 'rent')
-                 Padding(
-                   padding: const EdgeInsets.all(8.0),
-                   child: Text(
-                     'Rent Duration: ${widget.startDate.toString().split(" ")[0]} to ${widget.endDate.toString().split(" ")[0]}',
-                     style: TextStyle(color: Colors.white70),
-                   ),
-                 ),
-              SizedBox(height: 20),
-              Container(
-                padding: EdgeInsets.all(10),
-                color: Colors.white,
-                child: QrImageView(
-                  data: upiData,
-                  version: QrVersions.auto,
-                  size: 200.0,
+        padding: EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildProgressIndicator(),
+            SizedBox(height: 24),
+            
+            // QR Section
+            Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.indigo[900]!, Colors.indigo[600]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 20, offset: Offset(0, 10))
+                ],
               ),
-              SizedBox(height: 30),
-        
-              // Upload Proof Section
-              Text('Upload Payment Screenshot', style: TextStyle(color: Colors.white, fontSize: 16)),
-              SizedBox(height: 10),
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 150,
-                  width: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(10),
+              child: Column(
+                children: [
+                  Text(
+                    widget.type == 'membership' ? 'Donate ₹99 to Become Premium' : 'Pay to Secure Item',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
                   ),
-                  child: _proofImage != null
-                      ? Image.file(_proofImage!, fit: BoxFit.cover)
-                      : Icon(Icons.add_a_photo, color: Colors.white54, size: 50),
+                  if (widget.type != 'membership')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Funds will be held in Escrow for your safety.',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ),
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                    child: QrImageView(
+                      data: 'upi://pay?pa=${AppConstants.upiId}&pn=Unideal&am=${widget.type == 'membership' ? 99 : 0}&tn=${widget.product.title}',
+                      version: QrVersions.auto,
+                      size: 160.0,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  _buildUpiCopySection(),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.security, color: Colors.white70, size: 14),
+                      SizedBox(width: 4),
+                      Text('Secure UPI Payment', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            // Safety Message
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.security, color: Colors.amber[800]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Secure Escrow Payment',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber[900],
+                          ),
+                        ),
+                        Text(
+                          'Money is held by Unideal until you receive the item and share the OTP with the seller.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.amber[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            SizedBox(height: 32),
+            _buildSectionTitle('Transaction Details'),
+            SizedBox(height: 12),
+            TextField(
+              controller: _utrController,
+              decoration: InputDecoration(
+                hintText: 'Enter 12-digit UTR or Transaction ID',
+                prefixIcon: Icon(Icons.numbers, color: Colors.indigo),
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: Colors.indigo.withOpacity(0.1)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: Colors.indigo.withOpacity(0.1)),
                 ),
               ),
-              SizedBox(height: 30),
-        
-              _isProcessing
-                  ? CircularProgressIndicator(color: Colors.purpleAccent)
-                  : ElevatedButton(
-                      onPressed: () => _confirmPayment(context, amount),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                      ),
-                      child: Text('I HAVE PAID', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-              SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Cancel Purchase', style: TextStyle(color: Colors.redAccent)),
-              ),
-              SizedBox(height: 20),
-            ],
-          ),
+            ),
+            SizedBox(height: 24),
+            _buildSectionTitle('Upload Payment Screenshot'),
+            SizedBox(height: 12),
+            _buildUploadArea(),
+            
+            SizedBox(height: 40),
+            _buildSubmitButton(),
+            SizedBox(height: 16),
+            _buildTrustFooter(),
+            SizedBox(height: 30),
+          ],
         ),
       ),
     );
   }
 
-  Future<String?> _uploadProof(File image) async {
-    // In a real app, use MultipartRequest to send to backend /api/upload
-    // For MVP Phase 2, we mocked 'createOrder' receiving an image URL.
-    // Let's implement actual upload if possible, or Mock URL.
-    // Assuming backend is at localhost:5000 (Use IP for emulator: 10.0.2.2)
-    // For simplicity locally, let's try to upload.
-    try {
-        var request = http.MultipartRequest('POST', Uri.parse('http://10.0.2.2:5000/api/upload/image'));
-        request.files.add(await http.MultipartFile.fromPath('image', image.path));
-        var res = await request.send();
-        if (res.statusCode == 200) {
-            var responseData = await res.stream.bytesToString();
-            // Assuming response is {"url": "..."}
-            // For Cloudinary it returns full URL. 
-            // Parsing Logic needed if it returns JSON. 
-            // Regex or simple string search (since I can't import dart:convert easily without checking imports)
-            // But wait, I can modify imports above.
-            return "https://res.cloudinary.com/demo/image/upload/sample.jpg"; // MOCK URL FALLBACK due to heavy dependencies needed for real JSON parsing/upload in one go without full context
-        }
-    } catch (e) {
-        print("Upload failed: $e");
-    }
-    return "https://via.placeholder.com/300?text=Payment+Proof"; // Mock
+  Widget _buildProgressIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildStep(1, 'Pay via UPI', isDone: true),
+        _buildStepLine(true),
+        _buildStep(2, 'Upload', isActive: _proofImage == null, isDone: _proofImage != null),
+        _buildStepLine(_proofImage != null),
+        _buildStep(3, 'Verify'),
+      ],
+    );
   }
 
-  Future<void> _confirmPayment(BuildContext context, double amount) async {
-    if (_proofImage == null) {
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please upload payment screenshot')));
-         return;
-    }
+  Widget _buildStep(int number, String label, {bool isDone = false, bool isActive = false}) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 14,
+          backgroundColor: isDone ? Colors.green : (isActive ? Colors.indigo : Colors.grey[300]),
+          child: isDone 
+            ? Icon(Icons.check, size: 16, color: Colors.white) 
+            : Text(number.toString(), style: TextStyle(fontSize: 12, color: isActive ? Colors.white : Colors.grey[600], fontWeight: FontWeight.bold)),
+        ),
+        SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 11, color: isDone || isActive ? Colors.black87 : Colors.grey[500], fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
+      ],
+    );
+  }
 
-    setState(() {
-      _isProcessing = true;
-    });
+  Widget _buildStepLine(bool isActive) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: EdgeInsets.only(bottom: 20),
+        color: isActive ? Colors.green : Colors.grey[200],
+      ),
+    );
+  }
 
-    try {
-      final user = Provider.of<AuthProvider>(context, listen: false).user;
-      if (user == null) throw Exception('User not logged in');
+  Widget _buildUpiCopySection() {
+    return GestureDetector(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: AppConstants.upiId));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('UPI ID Copied!'), duration: Duration(seconds: 1)));
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(AppConstants.upiId, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            SizedBox(width: 8),
+            Icon(Icons.copy, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
 
-      // Upload Image
-      // NOTE: Using Mock URL for MVP stability unless I implement full Http logic.
-      // Real implementation would handle multipart upload.
-      final proofUrl = await _uploadProof(_proofImage!);
+  Widget _buildSectionTitle(String title) {
+    return Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87));
+  }
 
-      await Provider.of<OrderProvider>(context, listen: false).createOrder(
-        product: widget.product,
-        amount: amount,
-        type: widget.type,
-        buyerId: user.id,
-        startDate: widget.startDate,
-        endDate: widget.endDate,
-        proofImage: proofUrl,
-      );
+  Widget _buildUploadArea() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: _proofImage != null ? Colors.green.withOpacity(0.02) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _proofImage != null ? Colors.green : Colors.indigo.withOpacity(0.1),
+            width: 1.5,
+            style: BorderStyle.solid, // Flutter doesn't natively support dashed easily without painter
+          ),
+        ),
+        child: _proofImage != null
+            ? Stack(
+                children: [
+                  ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(_proofImage!, fit: BoxFit.cover, width: double.infinity)),
+                  Positioned(
+                    right: 8, top: 8,
+                    child: CircleAvatar(backgroundColor: Colors.green, radius: 12, child: Icon(Icons.check, size: 14, color: Colors.white)),
+                  )
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.file_upload, color: Colors.indigo, size: 36),
+                  SizedBox(height: 12),
+                  Text('Tap to Upload Payment Screenshot', style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.w500)),
+                  Text('JPG or PNG supported', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+      ),
+    );
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order Placed! Waiting for Seller Approval.')));
-      
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-        (route) => false,
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order Failed: $e')));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
-    }
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: _isProcessing
+          ? Center(child: CircularProgressIndicator())
+          : ElevatedButton(
+              onPressed: _proofImage == null ? null : _confirmPayment,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey[200],
+                disabledForegroundColor: Colors.grey[400],
+                padding: EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: _proofImage == null ? 0 : 8,
+                shadowColor: Colors.indigo.withOpacity(0.4)
+              ),
+              child: Text('VERIFY PAYMENT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+            ),
+    );
+  }
+
+  Widget _buildTrustFooter() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_outline, size: 14, color: Colors.grey),
+            SizedBox(width: 4),
+            Text('🔒 Secure Payment • Powered by UPI', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
+        SizedBox(height: 8),
+        Text('Refer to our Refund Policy in Help section.', style: TextStyle(color: Colors.grey[400], fontSize: 10)),
+      ],
+    );
   }
 }

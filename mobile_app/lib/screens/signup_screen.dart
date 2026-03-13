@@ -9,6 +9,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -21,6 +22,7 @@ class _SignupScreenState extends State<SignupScreen> {
       await Provider.of<AuthProvider>(context, listen: false).signup(
         _emailController.text,
         _passwordController.text,
+        _fullNameController.text,
         _role,
       );
       Navigator.of(context).pushAndRemoveUntil(
@@ -68,6 +70,12 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                   SizedBox(height: 40),
+                  _buildTextField(
+                    controller: _fullNameController,
+                    label: 'Full Name',
+                    icon: Icons.person,
+                  ),
+                  SizedBox(height: 20),
                   _buildTextField(
                     controller: _emailController,
                     label: 'Email',

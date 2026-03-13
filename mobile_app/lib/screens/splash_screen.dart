@@ -17,18 +17,25 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
-    await Future.delayed(Duration(seconds: 2)); // Mock splash delay
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    await auth.tryAutoLogin();
-    
-    if (auth.isAuthenticated) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-      );
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => LoginScreen()),
-      );
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      // Wait for auth check with a reasonable timeout
+      await auth.tryAutoLogin().timeout(Duration(seconds: 10));
+    } catch (e) {
+      debugPrint("Auth check failed or timed out: $e");
+    } finally {
+      if (mounted) {
+        final auth = Provider.of<AuthProvider>(context, listen: false);
+        if (auth.isAuthenticated) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => HomeScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => LoginScreen()),
+          );
+        }
+      }
     }
   }
 
@@ -60,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               SizedBox(height: 10),
               Text(
-                'Premium P2P Marketplace',
+                'Reuse • Donate • Save Money',
                 style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
               SizedBox(height: 40),

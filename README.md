@@ -52,3 +52,21 @@ We follow a professional branching strategy to maintain code quality. Please ref
 1.  Navigate to the mobile app directory:
     ```bash
     cd mobile_app
+    ```
+
+2.  Install dependencies:
+    ```bash
+    flutter pub get
+    ```
+
+3.  Configure Environment:
+    Create/Update your Supabase configuration in `lib/main.dart` or your environment config file with your Project URL and Anon Key.
+
+4.  Run the application:
+    ```bash
+    flutter run
+    ```
+
+## 📄 License
+
+This project is licensed under the [Add License Type] - see the LICENSE file for details.

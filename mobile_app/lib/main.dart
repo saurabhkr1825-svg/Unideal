@@ -2,10 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
-import 'providers/order_provider.dart';
+import 'providers/transaction_provider.dart';
+import 'providers/auction_provider.dart';
 import 'screens/splash_screen.dart';
+import 'utils/app_theme.dart';
 
-void main() {
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: 'https://luooikdggmiwbgdzoubv.supabase.co',
+    anonKey: 'sb_publishable_5EPrVD9AJ78Wgc0Mqp-XHw_y9YtLsX-',
+  );
+
   runApp(MyApp());
 }
 
@@ -16,20 +27,13 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
-        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(create: (_) => AuctionProvider()),
       ],
       child: MaterialApp(
         title: 'Unideal',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          primarySwatch: Colors.indigo,
-          scaffoldBackgroundColor: Colors.black,
-          fontFamily: 'Inter', // Assuming Inter font is available or fallbacks
-          appBarTheme: AppBarTheme(
-            backgroundColor: Colors.indigo.shade900,
-          ),
-        ),
+        theme: AppTheme.themeData,
         home: SplashScreen(),
       ),
     );

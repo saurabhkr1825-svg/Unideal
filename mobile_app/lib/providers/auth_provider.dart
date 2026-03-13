@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+import '../services/supabase_auth_service.dart';
 import '../models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
   User? _user;
   bool _isLoading = false;
-  String? _token;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _token != null;
+  bool get isAuthenticated => _user != null;
 
   Future<void> login(String email, String password) async {
     _setLoading(true);
     try {
-      final data = await _authService.login(email, password);
-      _token = data['token'];
-      _user = User.fromJson(data['user']);
-      await _saveDataToPrefs();
+      final response = await _authService.login(email, password);
+      if (response.user != null) {
+        await _mapSupabaseUserToModel(response.user!);
+      }
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -28,13 +27,20 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> signup(String email, String password, String role) async {
+  Future<void> signup(String email, String password, String fullName, String role) async {
     _setLoading(true);
     try {
-      final data = await _authService.signup(email, password, role);
-      _token = data['token'];
-      _user = User.fromJson(data['user']);
-      await _saveDataToPrefs();
+      final response = await _authService.signup(
+        email, 
+        password, 
+        data: {
+          'full_name': fullName,
+          'role': role,
+        },
+      );
+      if (response.user != null) {
+        await _mapSupabaseUserToModel(response.user!);
+      }
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -46,43 +52,55 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     await _authService.logout();
     _user = null;
-    _token = null;
     notifyListeners();
   }
 
   Future<void> tryAutoLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('auth_token')) return;
-
-    _token = prefs.getString('auth_token');
-    // In a real app, you might want to fetch user profile here using the token
-    // For now, we will just assume logged in, but we lack User object. 
-    // Ideally, we persist User object or fetch it.
-    // Let's implement basics:
-    final userId = prefs.getString('user_id');
-    final email = prefs.getString('user_email');
-    final role = prefs.getString('user_role');
-    
-    if (userId != null) {
-      _user = User(
-        id: prefs.getString('user_mongo_id') ?? '',
-        userId: userId,
-        email: email ?? '',
-        role: role ?? 'user'
-      );
+    try {
+      final session = _authService.currentSession;
+      if (session != null && _authService.currentUser != null) {
+        await _mapSupabaseUserToModel(_authService.currentUser!);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Auto-login error: $e");
+      // Don't rethrow, just let it fail silently so app proceeds to Login
     }
-    
-    notifyListeners();
   }
 
-  Future<void> _saveDataToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_token != null) await prefs.setString('auth_token', _token!);
-    if (_user != null) {
-      await prefs.setString('user_mongo_id', _user!.id);
-      await prefs.setString('user_id', _user!.userId);
-      await prefs.setString('user_email', _user!.email);
-      await prefs.setString('user_role', _user!.role);
+  Future<void> updateProfile({required String fullName, required String phone}) async {
+    if (_user == null) return;
+    _setLoading(true);
+    try {
+      await _authService.updateProfile(_user!.id, {
+        'full_name': fullName,
+        'phone': phone,
+      });
+      // Refresh local user data
+      await _mapSupabaseUserToModel(_authService.currentUser!);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> reloadUser() async {
+    try {
+      if (_authService.currentUser != null) {
+        await _mapSupabaseUserToModel(_authService.currentUser!);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Error reloading user: $e");
+    }
+  }
+
+  Future<void> _mapSupabaseUserToModel(supabase.User sbUser) async {
+    final profile = await _authService.getProfile(sbUser.id);
+    if (profile != null) {
+      _user = User.fromJson(profile, sbUser.email ?? '');
     }
   }
 
