@@ -61,7 +61,7 @@ class SupabaseChatService {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
-    _client.channel('chat:$chatId').sendBroadcast(
+    _client.channel('chat:$chatId').sendBroadcastMessage(
       event: 'typing',
       payload: {'user_id': user.id, 'is_typing': isTyping},
     );

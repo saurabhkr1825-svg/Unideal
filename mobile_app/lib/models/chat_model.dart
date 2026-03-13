@@ -56,6 +56,7 @@ class ChatRoom {
 class ChatMessage {
   final String id;
   final String chatId;
+  final String senderId;
   final String message;
   final DateTime sentAt;
   final String status; // sent, delivered, read
