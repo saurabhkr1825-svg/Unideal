@@ -72,7 +72,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icons.lock,
                     obscureText: true,
                   ),
-                  SizedBox(height: 40),
+                  SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _showForgotPasswordDialog,
+                      child: Text('Forgot Password?', style: TextStyle(color: Colors.white70)),
+                    ),
+                  ),
+                  SizedBox(height: 20),
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) => auth.isLoading
                         ? CircularProgressIndicator(color: Colors.purpleAccent)
@@ -134,6 +142,60 @@ class _LoginScreenState extends State<LoginScreen> {
           if (value == null || value.isEmpty) return 'Please enter $label';
           return null;
         },
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.deepPurple.shade900,
+        title: Text('Reset Password', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: resetEmailController,
+          style: TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Enter your email',
+            hintStyle: TextStyle(color: Colors.white54),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+          ),
+          keyboardType: TextInputType.emailAddress,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+            onPressed: () async {
+              final email = resetEmailController.text.trim();
+              if (email.isEmpty) return;
+              
+              Navigator.of(ctx).pop();
+              
+              try {
+                await Provider.of<AuthProvider>(context, listen: false).sendPasswordReset(email);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Password reset email sent! Check your inbox.')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            child: Text('Reset', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
