@@ -131,10 +131,18 @@ class SupabaseTransactionService {
   Future<void> updateTransactionStatus(String transactionId, String status, String userId, String title, {bool isSellerNotification = false}) async {
     try {
       // 1. Update status
-      await _client.from('transactions').update({
+      final updateData = {
         'status': status,
         'escrow_status': status == 'completed' ? 'held' : (status == 'pending' ? 'verified' : 'refunded'),
-      }).eq('id', transactionId);
+      };
+
+      // Generate OTP if approving (pending status)
+      if (status == 'pending') {
+        final random = DateTime.now().millisecondsSinceEpoch % 1000000;
+        updateData['otp'] = random.toString().padLeft(6, '0');
+      }
+
+      await _client.from('transactions').update(updateData).eq('id', transactionId);
 
       // 2. Create Notification for the user
       String notifTitle = 'Payment Update';

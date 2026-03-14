@@ -85,12 +85,16 @@ class ProductCard extends StatelessWidget {
   }
 
   Widget _buildBadge() {
-    if (product.isAuction) {
+    if (product.status == 'pending_approval') {
+      return ItemBadge.pendingClaim();
+    } else if (!product.isAvailable) {
+       return ItemBadge.claimed();
+    } else if (product.isAuction) {
       return ItemBadge.auction();
     } else if (product.price > 0) {
       return ItemBadge.forSale();
     } else {
-      return ItemBadge.donation();
+      return ItemBadge.available();
     }
   }
 }

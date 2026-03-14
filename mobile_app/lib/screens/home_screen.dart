@@ -23,6 +23,7 @@ import '../services/supabase_notification_service.dart';
 import '../models/notification_model.dart';
 import '../providers/auction_provider.dart';
 import '../widgets/live_auction_card.dart';
+import 'claim_management_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -416,7 +417,7 @@ class _BrowseTabState extends State<BrowseTab> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _categories = [
-    'All', 'Electronics', 'Books', 'Fashion', 'Home', 'Services', 'Others'
+    'All', 'Books', 'Electronics', 'Furniture', 'Clothes', 'Hostel Essentials', 'Others'
   ];
 
   @override
@@ -1011,13 +1012,16 @@ class ProfileTab extends StatelessWidget {
                 _buildProfileItem(Icons.favorite_outline, 'My Donations', 'Items you\'ve given away', () {
                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => MyDonationsScreen()));
                 }),
+                _buildProfileItem(Icons.how_to_reg, 'Manage Claim Requests', 'Approve/Reject requests for your items', () {
+                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => ClaimManagementScreen(isAdminView: false)));
+                }),
                 // Admin-specific option
                 if (user?.role == 'admin') ...[
                   _buildProfileItem(Icons.card_membership_rounded, 'Admin: Membership Requests', 'Approve/Reject premium plans', () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => AdminMembershipPanel()));
                   }),
-                  _buildProfileItem(Icons.inventory_2_outlined, 'Admin: Donation Requests', 'Verify and approve item requests', () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => AdminDonationPanel()));
+                  _buildProfileItem(Icons.inventory_2_outlined, 'Admin: Donation Claims', 'Manage unified pending claims', () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => ClaimManagementScreen(isAdminView: true)));
                   }),
                   _buildProfileItem(Icons.account_balance_wallet_outlined, 'Admin: Fund Release', 'Approve/Reject seller fund releases', () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => AdminFundReleasePanel()));
