@@ -125,10 +125,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     'With: ${room.otherUserName}',
                     style: TextStyle(color: Colors.indigo, fontSize: 13),
                   ),
-                  Text(
-                    'ID: ${room.otherUserId}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                  ),
                   if (room.lastMessage != null)
                     Text(
                       room.lastMessage!,

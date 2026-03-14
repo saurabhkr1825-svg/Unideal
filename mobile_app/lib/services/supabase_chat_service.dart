@@ -128,6 +128,11 @@ class SupabaseChatService {
       'status': 'sent',
     });
 
+    await _client.from('chats').update({
+      'last_message': type == 'image' ? '[Image]' : content,
+      'last_message_at': DateTime.now().toIso8601String(),
+    }).eq('id', chatId);
+
     // 2. Create Notification for the receiver
     try {
       final chatData = await _client.from('chats').select('sender_id, receiver_id').eq('id', chatId).single();

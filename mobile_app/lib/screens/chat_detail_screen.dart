@@ -216,18 +216,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       body: Column(
         children: [
           _buildProductContext(),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-            width: double.infinity,
-            color: Colors.indigo[50],
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              children: [
-                Text('Your ID: ${myId ?? "N/A"}', style: TextStyle(fontSize: 10, color: Colors.indigo[900])),
-                Text('Other ID: ${widget.otherUserId}', style: TextStyle(fontSize: 10, color: Colors.indigo[900])),
-              ],
-            ),
-          ),
           Expanded(
             child: _chatId == null 
               ? Center(child: CircularProgressIndicator())

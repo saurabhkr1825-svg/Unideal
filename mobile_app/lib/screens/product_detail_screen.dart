@@ -157,46 +157,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           Text('PENDING ADMIN APPROVAL', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 16)),
                         ],
                       ),
-                    )
-                  else if (widget.product.isAvailable)
+                    ),
+                  // Chat Button (Always available to interact with donor)
+                  SizedBox(
+                    width: double.infinity,
+                    child: SecondaryButton(
+                        onPressed: () async {
+                          // Removed hard membership gating. Free users can now chat with limits.
+                          String? chatUserId = widget.product.donorId;
+                          String userName = 'Donor';
+
+                          // If donor is missing or null, route to Admin
+                          if (chatUserId == null || chatUserId.isEmpty) {
+                             final adminId = await SupabaseAuthService().getAdminId();
+                             if (adminId != null) {
+                               chatUserId = adminId;
+                               userName = 'Admin';
+                             } else {
+                               if (mounted) {
+                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Support is currently unavailable.')));
+                               }
+                               return;
+                             }
+                          }
+
+                          if (!mounted) return;
+                          
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ChatDetailScreen(
+                              otherUserId: chatUserId!, 
+                              otherUserEmail: userName,
+                              donationId: widget.product.id,
+                              donationTitle: widget.product.title,
+                            )
+                          ));
+                        },
+                       icon: Icons.chat_bubble_outline,
+                       text: 'Chat with Donor',
+                    ),
+                  ),
+                  SizedBox(height: 12),
+
+                  if (widget.product.isAvailable)
                   Column(
                     children: [
-                       SizedBox(
-                         width: double.infinity,
-                         child: SecondaryButton(
-                             onPressed: () async {
-                               // Removed hard membership gating. Free users can now chat with limits.
-                               String? chatUserId = widget.product.donorId;
-                               String userName = 'Donor';
-
-                               // If donor is missing or null, route to Admin
-                               if (chatUserId == null || chatUserId.isEmpty) {
-                                  final adminId = await SupabaseAuthService().getAdminId();
-                                  if (adminId != null) {
-                                    chatUserId = adminId;
-                                    userName = 'Admin';
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Support is currently unavailable.')));
-                                    return;
-                                  }
-                               }
-
-                               if (!mounted) return;
-                               
-                               Navigator.of(context).push(MaterialPageRoute(
-                                 builder: (_) => ChatDetailScreen(
-                                   otherUserId: chatUserId!, 
-                                   otherUserEmail: userName,
-                                   donationId: widget.product.id,
-                                   donationTitle: widget.product.title,
-                                 )
-                               ));
-                             },
-                            icon: Icons.chat_bubble_outline,
-                            text: 'Chat with Donor',
-                         ),
-                       ),
-                        SizedBox(height: 12),
                         if (!widget.product.isAuction)
                         SizedBox(
                           width: double.infinity,

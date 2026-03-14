@@ -30,10 +30,11 @@ class ChatRoom {
     final receiver = map['receiver_id'] as String;
     
     // The "other" user is the one who is NOT the current user
-    final otherUserId = sender == currentUserId ? receiver : sender;
+    final isSender = sender == currentUserId;
+    final otherUserId = isSender ? receiver : sender;
     
     // Handle nested profiles and donations if they exist in the join
-    final otherUserProfile = map['profiles_receiver'] ?? map['profiles_sender'] ?? {};
+    final otherUserProfile = isSender ? (map['profiles_receiver'] ?? {}) : (map['profiles_sender'] ?? {});
     final otherUserName = otherUserProfile['full_name'] ?? 'User';
     
     final donation = map['donations'] ?? {};
