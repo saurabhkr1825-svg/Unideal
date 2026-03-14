@@ -11,6 +11,7 @@ import '../providers/auction_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/custom_buttons.dart';
 import '../widgets/item_badge.dart';
+import '../services/supabase_claim_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -140,51 +141,78 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     _buildAuctionStream(context),
                   
                   // Action Section
+                  if (widget.product.status == 'pending_approval')
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50], 
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3))
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.hourglass_empty, color: Colors.orange, size: 30),
+                          SizedBox(height: 8),
+                          Text('PENDING ADMIN APPROVAL', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
+                      ),
+                    ),
+                  // Chat Button (Always available to interact with donor)
+                  SizedBox(
+                    width: double.infinity,
+                    child: SecondaryButton(
+                        onPressed: () async {
+                          // Removed hard membership gating. Free users can now chat with limits.
+                          String? chatUserId = widget.product.donorId;
+                          String userName = 'Donor';
+
+                          // If donor is missing or null, route to Admin
+                          if (chatUserId == null || chatUserId.isEmpty) {
+                             final adminId = await SupabaseAuthService().getAdminId();
+                             if (adminId != null) {
+                               chatUserId = adminId;
+                               userName = 'Admin';
+                             } else {
+                               if (mounted) {
+                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Support is currently unavailable.')));
+                               }
+                               return;
+                             }
+                          }
+
+                          if (!mounted) return;
+                          
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ChatDetailScreen(
+                              otherUserId: chatUserId!, 
+                              otherUserEmail: userName,
+                              donationId: widget.product.id,
+                              donationTitle: widget.product.title,
+                            )
+                          ));
+                        },
+                       icon: Icons.chat_bubble_outline,
+                       text: 'Chat with Donor',
+                    ),
+                  ),
+                  SizedBox(height: 12),
+
                   if (widget.product.isAvailable)
                   Column(
                     children: [
-                       SizedBox(
-                         width: double.infinity,
-                         child: SecondaryButton(
-                             onPressed: () async {
-                               // Removed hard membership gating. Free users can now chat with limits.
-                               String? chatUserId = widget.product.donorId;
-                               String userName = 'Donor';
-
-                               // If donor is missing or null, route to Admin
-                               if (chatUserId == null || chatUserId.isEmpty) {
-                                  final adminId = await SupabaseAuthService().getAdminId();
-                                  if (adminId != null) {
-                                    chatUserId = adminId;
-                                    userName = 'Admin';
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Support is currently unavailable.')));
-                                    return;
-                                  }
-                               }
-
-                               if (!mounted) return;
-                               
-                               Navigator.of(context).push(MaterialPageRoute(
-                                 builder: (_) => ChatDetailScreen(
-                                   otherUserId: chatUserId!, 
-                                   otherUserEmail: userName,
-                                   donationId: widget.product.id,
-                                   donationTitle: widget.product.title,
-                                 )
-                               ));
-                             },
-                            icon: Icons.chat_bubble_outline,
-                            text: 'Chat with Donor',
-                         ),
-                       ),
-                        SizedBox(height: 12),
                         if (!widget.product.isAuction)
                         SizedBox(
                           width: double.infinity,
                           child: PrimaryButton(
-                            onPressed: () => _handleBuy(context),
-                            text: widget.product.price > 0 ? 'BUY NOW' : 'REQUEST ITEM NOW',
+                            onPressed: () {
+                              if (widget.product.price > 0) {
+                                _handleBuy(context);
+                              } else {
+                                _showClaimDialog(context);
+                              }
+                            },
+                            text: widget.product.price > 0 ? 'BUY NOW' : 'CLAIM ITEM',
                           ),
                         ),
                     ],
@@ -463,6 +491,101 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             SizedBox(height: 10),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showClaimDialog(BuildContext context) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please login')));
+      return;
+    }
+
+    final _nameController = TextEditingController(text: user.fullName);
+    final _phoneController = TextEditingController(text: user.phone ?? '');
+    final _reasonController = TextEditingController();
+    final _timeController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Claim Item', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  IconButton(icon: Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+              ),
+              SizedBox(height: 12),
+               TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder()),
+              ),
+              SizedBox(height: 12),
+               TextField(
+                controller: _reasonController,
+                maxLines: 2,
+                decoration: InputDecoration(labelText: 'Pickup Reason (Optional)', border: OutlineInputBorder()),
+              ),
+               SizedBox(height: 12),
+               TextField(
+                controller: _timeController,
+                decoration: InputDecoration(labelText: 'Pickup Time Preference (e.g. 5-7 PM)', border: OutlineInputBorder()),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: PrimaryButton(
+                  onPressed: () async {
+                    if (_nameController.text.isEmpty || _phoneController.text.isEmpty || _timeController.text.isEmpty) {
+                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all required fields.')));
+                       return;
+                    }
+
+                    Navigator.pop(ctx);
+                    try {
+                      await SupabaseClaimService().submitClaim(
+                        itemId: widget.product.id,
+                        userId: user.id,
+                        name: _nameController.text,
+                        phone: _phoneController.text,
+                        pickupReason: _reasonController.text.isNotEmpty ? _reasonController.text : null,
+                        pickupTimePreference: _timeController.text,
+                      );
+                      // Update UI state
+                      Provider.of<ProductProvider>(context, listen: false).updateProductStatus(widget.product.id, 'pending_approval');
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Claim request submitted successfully!'), backgroundColor: Colors.green));
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red));
+                    }
+                  },
+                  icon: Icons.check_circle_outline,
+                  text: 'Submit Claim Request',
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

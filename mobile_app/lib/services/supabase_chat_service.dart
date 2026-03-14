@@ -67,17 +67,21 @@ class SupabaseChatService {
     );
   }
 
-  // Find or create a chat between two users for a specific donation
-  Future<String> getOrCreateChat(String otherUserId, String donationId) async {
+  // Find or create a chat between two users for a specific donation or general chat
+  Future<String> getOrCreateChat(String otherUserId, {String? donationId}) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
     if (user.id == otherUserId) throw Exception('Cannot chat with yourself');
 
     // Try to find existing chat
-    final existingChat = await _client
-        .from('chats')
-        .select('id')
-        .eq('donation_id', donationId)
+    var query = _client.from('chats').select('id');
+    if (donationId != null) {
+      query = query.eq('donation_id', donationId);
+    } else {
+      query = query.isFilter('donation_id', null);
+    }
+
+    final existingChat = await query
         .or('and(sender_id.eq.${user.id},receiver_id.eq.$otherUserId),and(sender_id.eq.$otherUserId,receiver_id.eq.${user.id})')
         .maybeSingle();
 
@@ -87,12 +91,27 @@ class SupabaseChatService {
 
     // Create new chat
     final newChat = await _client.from('chats').insert({
-      'donation_id': donationId,
+      if (donationId != null) 'donation_id': donationId,
       'sender_id': user.id,
       'receiver_id': otherUserId,
     }).select('id').single();
 
     return newChat['id'] as String;
+  }
+
+  // Search for users to start a chat with
+  Future<List<Map<String, dynamic>>> searchUsers(String query) async {
+    final user = _client.auth.currentUser;
+    if (user == null || query.trim().isEmpty) return [];
+
+    final response = await _client
+        .from('profiles')
+        .select('id, full_name, email, online_status, last_seen')
+        .ilike('full_name', '%${query.trim()}%')
+        .neq('id', user.id)
+        .limit(20);
+
+    return List<Map<String, dynamic>>.from(response);
   }
 
   // Send a message
@@ -108,6 +127,11 @@ class SupabaseChatService {
       'image_url': imageUrl,
       'status': 'sent',
     });
+
+    await _client.from('chats').update({
+      'last_message': type == 'image' ? '[Image]' : content,
+      'last_message_at': DateTime.now().toIso8601String(),
+    }).eq('id', chatId);
 
     // 2. Create Notification for the receiver
     try {

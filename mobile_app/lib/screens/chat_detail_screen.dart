@@ -12,7 +12,7 @@ import '../widgets/custom_card.dart';
 class ChatDetailScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserEmail;
-  final String donationId;
+  final String? donationId;
   final String? donationTitle;
   final String? donationImageUrl;
 
@@ -20,7 +20,7 @@ class ChatDetailScreen extends StatefulWidget {
     Key? key,
     required this.otherUserId,
     required this.otherUserEmail,
-    required this.donationId,
+    this.donationId,
     this.donationTitle,
     this.donationImageUrl,
   }) : super(key: key);
@@ -76,7 +76,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   Future<void> _initChat() async {
     try {
-      final id = await _chatService.getOrCreateChat(widget.otherUserId, widget.donationId);
+      final id = await _chatService.getOrCreateChat(widget.otherUserId, donationId: widget.donationId);
       if (mounted) {
         setState(() {
           _chatId = id;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/supabase_chat_service.dart';
 import '../models/chat_model.dart';
 import 'chat_detail_screen.dart';
+import 'search_user_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   @override
@@ -63,91 +64,105 @@ class _ChatListScreenState extends State<ChatListScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadChatRooms,
-      child: ListView.separated(
-        itemCount: _chatRooms.length,
-        separatorBuilder: (context, index) => Divider(height: 1, indent: 80),
-        itemBuilder: (ctx, i) {
-          final room = _chatRooms[i];
-          return ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Hero(
-              tag: 'chat-avatar-${room.id}',
-              child: Stack(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      image: room.donationImageUrl != null
-                          ? DecorationImage(
-                              image: NetworkImage(room.donationImageUrl!),
-                              fit: BoxFit.cover,
-                            )
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: _loadChatRooms,
+        child: ListView.separated(
+          itemCount: _chatRooms.length,
+          separatorBuilder: (context, index) => Divider(height: 1, indent: 80),
+          itemBuilder: (ctx, i) {
+            final room = _chatRooms[i];
+            return ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Hero(
+                tag: 'chat-avatar-${room.id}',
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: room.donationImageUrl != null
+                            ? DecorationImage(
+                                image: NetworkImage(room.donationImageUrl!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                        color: Colors.indigo[50],
+                      ),
+                      child: room.donationImageUrl == null
+                          ? Icon(Icons.volunteer_activism, color: Colors.indigo)
                           : null,
-                      color: Colors.indigo[50],
                     ),
-                    child: room.donationImageUrl == null
-                        ? Icon(Icons.volunteer_activism, color: Colors.indigo)
-                        : null,
-                  ),
-                  if (room.otherUserStatus == 'online')
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                    if (room.otherUserStatus == 'online')
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
                         ),
                       ),
+                  ],
+                ),
+              ),
+              title: Text(
+                room.donationTitle ?? 'Item Chat',
+                style: TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'With: ${room.otherUserName}',
+                    style: TextStyle(color: Colors.indigo, fontSize: 13),
+                  ),
+                  if (room.lastMessage != null)
+                    Text(
+                      room.lastMessage!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[600]),
                     ),
                 ],
               ),
-            ),
-            title: Text(
-              room.donationTitle ?? 'Item Chat',
-              style: TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'With: ${room.otherUserName}',
-                  style: TextStyle(color: Colors.indigo, fontSize: 13),
-                ),
-                if (room.lastMessage != null)
-                  Text(
-                    room.lastMessage!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey[600]),
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChatDetailScreen(
+                      otherUserId: room.otherUserId,
+                      otherUserEmail: room.otherUserName,
+                      donationId: room.donationId,
+                      donationTitle: room.donationTitle,
+                      donationImageUrl: room.donationImageUrl,
+                    ),
                   ),
-              ],
-            ),
-            onTap: () async {
-              await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ChatDetailScreen(
-                    otherUserId: room.otherUserId,
-                    otherUserEmail: room.otherUserName,
-                    donationId: room.donationId,
-                    donationTitle: room.donationTitle,
-                    donationImageUrl: room.donationImageUrl,
-                  ),
-                ),
-              );
-              _loadChatRooms(); // Refresh when coming back
-            },
+                );
+                _loadChatRooms(); // Refresh when coming back
+              },
+            );
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => SearchUserScreen()),
           );
+          _loadChatRooms();
         },
+        backgroundColor: Colors.indigo,
+        child: Icon(Icons.search, color: Colors.white),
+        tooltip: 'Search Users',
       ),
     );
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/supabase_transaction_service.dart';
 import '../models/transaction_model.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../providers/product_provider.dart';
 
 class AdminDonationPanel extends StatefulWidget {
   @override
@@ -33,9 +35,20 @@ class _AdminDonationPanelState extends State<AdminDonationPanel> {
     }
   }
 
-  Future<void> _updateStatus(String id, String status, String userId, String itemTitle) async {
+  Future<void> _updateStatus(String id, String status, String userId, String itemTitle, {String? donationId}) async {
     try {
       await _transactionService.updateTransactionStatus(id, status, userId, itemTitle);
+      
+      if (donationId != null) {
+        if (status == 'pending') {
+          // Transaction approved by admin, reserve the item
+          await Provider.of<ProductProvider>(context, listen: false).updateProductStatus(donationId, 'reserved');
+        } else if (status == 'failed') {
+          // Transaction rejected, make the item available again
+          await Provider.of<ProductProvider>(context, listen: false).updateProductStatus(donationId, 'available');
+        }
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request $status successfully!'), backgroundColor: status == 'completed' ? Colors.green : Colors.red));
       _fetchRequests();
     } catch (e) {
@@ -155,7 +168,7 @@ class _AdminDonationPanelState extends State<AdminDonationPanel> {
                               children: [
                                 Expanded(
                                   child: OutlinedButton(
-                                    onPressed: () => _updateStatus(req.id, 'failed', req.userId, req.itemTitle ?? 'Item'),
+                                    onPressed: () => _updateStatus(req.id, 'failed', req.userId, req.itemTitle ?? 'Item', donationId: req.donationId),
                                     child: Text('Reject'),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.red,
@@ -168,7 +181,7 @@ class _AdminDonationPanelState extends State<AdminDonationPanel> {
                                 SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: () => _updateStatus(req.id, 'pending', req.userId, req.itemTitle ?? 'Item'),
+                                    onPressed: () => _updateStatus(req.id, 'pending', req.userId, req.itemTitle ?? 'Item', donationId: req.donationId),
                                     child: Text('Approve'),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green,

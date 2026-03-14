@@ -55,6 +55,17 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> sendPasswordReset(String email) async {
+    _setLoading(true);
+    try {
+      await _authService.sendPasswordReset(email);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> tryAutoLogin() async {
     try {
       final session = _authService.currentSession;

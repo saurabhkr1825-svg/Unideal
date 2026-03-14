@@ -7,6 +7,7 @@ class User {
   final String role;
   final bool membershipStatus;
   final DateTime? membershipExpiry;
+  final int claimScore;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     required this.role,
     this.membershipStatus = false,
     this.membershipExpiry,
+    this.claimScore = 5,
   });
 
   factory User.fromJson(Map<String, dynamic> json, String email) {
@@ -31,6 +33,7 @@ class User {
       membershipExpiry: json['membership_expiry'] != null 
           ? DateTime.parse(json['membership_expiry']) 
           : null,
+      claimScore: json['claim_score'] ?? 5,
     );
   }
 }

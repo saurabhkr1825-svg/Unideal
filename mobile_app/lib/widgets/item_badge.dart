@@ -18,6 +18,10 @@ class ItemBadge extends StatelessWidget {
   factory ItemBadge.forSale() => const ItemBadge(text: "FOR SALE", color: AppTheme.forSaleColor);
   factory ItemBadge.sold() => const ItemBadge(text: "SOLD", color: Colors.grey);
   
+  factory ItemBadge.available() => const ItemBadge(text: "🟢 AVAILABLE", color: Colors.green);
+  factory ItemBadge.pendingClaim() => const ItemBadge(text: "🟡 PENDING CLAIM", color: Colors.orange);
+  factory ItemBadge.claimed() => const ItemBadge(text: "🔴 CLAIMED", color: Colors.red);
+  
   @override
   Widget build(BuildContext context) {
     return Container(

@@ -133,8 +133,11 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                 if (isBuyer && tx.status == 'pending' && !tx.otpVerified && tx.otp != null)
                   _buildBuyerOtpSection(tx.otp!),
                 
-                if (isBuyer && tx.status == 'pending' && tx.otp == null)
+                if (isBuyer && tx.status == 'payment_verifying')
                   _buildWaitingMsg('Payment under review by Admin. OTP will appear here once verified.'),
+
+                if (!isBuyer && tx.status == 'payment_verifying')
+                  _buildWaitingMsg('Buyer has paid. Waiting for Admin to verify payment before you can deliver.'),
 
                 if (!isBuyer && tx.status == 'pending' && !tx.otpVerified)
                   _buildSellerVerificationSection(tx),

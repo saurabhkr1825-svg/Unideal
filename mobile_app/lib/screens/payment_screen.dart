@@ -86,11 +86,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
       
       final paymentAmount = widget.type == 'membership' ? 99.0 : (widget.finalPriceOverride ?? widget.product.price);
 
+      String txType = 'sale';
+      if (widget.type == 'membership') {
+        txType = 'membership';
+      } else if (widget.product.isAuction) {
+        txType = 'auction';
+      } else if (widget.product.price == 0) {
+        txType = 'donation_request';
+      }
+
       final tx = await Provider.of<TransactionProvider>(context, listen: false).createTransaction(
         userId: user.id,
         donationId: widget.product.id,
         amount: paymentAmount,
-        type: widget.type == 'membership' ? 'membership' : 'donation_request',
+        type: txType,
         paymentRef: proofUrl ?? 'REF_${DateTime.now().millisecondsSinceEpoch}',
         utrNumber: _utrController.text.trim(),
         sellerId: widget.product.donorId,
@@ -98,7 +107,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
       // Update product status to reserved if it's a purchase/donation request
       if (widget.type != 'membership') {
-        await Provider.of<ProductProvider>(context, listen: false).updateProductStatus(widget.product.id, 'reserved');
+        await Provider.of<ProductProvider>(context, listen: false).updateProductStatus(widget.product.id, 'pending_approval');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
