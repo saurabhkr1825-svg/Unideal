@@ -23,6 +23,10 @@ class SupabaseAuthService {
     await _client.auth.signOut();
   }
 
+  Future<void> sendPasswordReset(String email) async {
+    await _client.auth.resetPasswordForEmail(email);
+  }
+
   Future<Map<String, dynamic>?> getProfile(String userId) async {
     return await _client
         .from('profiles')
