@@ -217,6 +217,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                     ],
                   )
+                  else if (widget.product.status == 'sold')
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200], 
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.grey.withOpacity(0.3))
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.grey[700], size: 30),
+                          SizedBox(height: 8),
+                          Text('THIS ITEM HAS BEEN SOLD', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
+                      ),
+                    )
                   else
                     Container(
                       width: double.infinity,
@@ -592,7 +609,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildBadge() {
-    if (widget.product.isAuction) {
+    if (widget.product.status == 'sold') {
+      return ItemBadge.sold();
+    } else if (widget.product.isAuction) {
       return ItemBadge.auction();
     } else if (widget.product.price > 0) {
       return ItemBadge.forSale();
