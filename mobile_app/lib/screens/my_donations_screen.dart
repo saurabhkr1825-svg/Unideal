@@ -11,7 +11,7 @@ class MyDonationsScreen extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Donations', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('My Listings', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
