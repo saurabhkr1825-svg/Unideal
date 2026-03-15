@@ -25,7 +25,7 @@ class _SalesDashboardScreenState extends State<SalesDashboardScreen> {
     try {
       final user = Provider.of<AuthProvider>(context, listen: false).user;
       // Map action to status
-      String newStatus = action == 'approve' ? 'completed' : 'failed';
+      String newStatus = action == 'approve' ? 'completed' : 'rejected_by_donor';
       
       final tx = Provider.of<TransactionProvider>(context, listen: false).transactions.firstWhere((t) => t.id == txId);
       

@@ -144,6 +144,17 @@ class SupabaseTransactionService {
 
       await _client.from('transactions').update(updateData).eq('id', transactionId);
 
+      // 1b. If rejected, release the item back to the public pool
+      if (status == 'rejected_by_admin' || status == 'rejected_by_donor') {
+        final tx = await _client.from('transactions').select('donation_id').eq('id', transactionId).single();
+        if (tx['donation_id'] != null) {
+          await _client.from('donations').update({
+            'is_available': true,
+            'status': 'available'
+          }).eq('id', tx['donation_id']);
+        }
+      }
+
       // 2. Create Notification for the user
       String notifTitle = 'Payment Update';
       String notifMsg = 'Your payment status was updated.';
@@ -154,9 +165,11 @@ class SupabaseTransactionService {
       } else if (status == 'pending') {
         notifTitle = 'Payment Verified';
         notifMsg = 'Your payment for "$title" has been verified. Your delivery OTP is now visible in My Orders.';
-      } else if (status == 'rejected' || status == 'failed') {
-        notifTitle = 'Payment Rejected';
-        notifMsg = 'Your payment for "$title" was rejected by admin. Please contact support.';
+      } else if (status == 'rejected' || status == 'failed' || status == 'rejected_by_admin' || status == 'rejected_by_donor') {
+        notifTitle = 'Transaction Rejected';
+        notifMsg = status == 'rejected_by_donor' 
+            ? 'The donor has rejected your claim for "$title".' 
+            : 'Your claim for "$title" was rejected by admin. Please contact support.';
       }
 
       await SupabaseNotificationService().createNotification(
