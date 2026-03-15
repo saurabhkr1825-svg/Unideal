@@ -37,7 +37,7 @@ class SupabaseTransactionService {
     try {
       final response = await _client
           .from('transactions')
-          .select('otp, user_id, donations(title)')
+          .select('otp, user_id, donation_id, donations(title)')
           .eq('id', transactionId)
           .single();
       
@@ -46,6 +46,14 @@ class SupabaseTransactionService {
         await _client.from('transactions').update({
           'otp_verified': true,
         }).eq('id', transactionId);
+
+        // Update item status to sold since delivery is confirmed
+        if (response['donation_id'] != null) {
+          await _client.from('donations').update({
+            'status': 'sold',
+            'is_available': false,
+          }).eq('id', response['donation_id']);
+        }
 
         // Notify Buyer
         final itemName = response['donations'] != null ? response['donations']['title'] : 'your item';
@@ -143,6 +151,17 @@ class SupabaseTransactionService {
       }
 
       await _client.from('transactions').update(updateData).eq('id', transactionId);
+
+      // If status is completed (funds released), mark item as sold
+      if (status == 'completed') {
+        final tx = await _client.from('transactions').select('donation_id').eq('id', transactionId).single();
+        if (tx['donation_id'] != null) {
+          await _client.from('donations').update({
+            'status': 'sold',
+            'is_available': false,
+          }).eq('id', tx['donation_id']);
+        }
+      }
 
       // 2. Create Notification for the user
       String notifTitle = 'Payment Update';

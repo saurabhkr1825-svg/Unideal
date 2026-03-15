@@ -85,7 +85,9 @@ class ProductCard extends StatelessWidget {
   }
 
   Widget _buildBadge() {
-    if (product.status == 'pending_approval') {
+    if (product.status == 'sold') {
+      return ItemBadge.sold();
+    } else if (product.status == 'pending_approval') {
       return ItemBadge.pendingClaim();
     } else if (!product.isAvailable) {
        return ItemBadge.claimed();

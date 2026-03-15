@@ -24,7 +24,10 @@ class SupabaseAuthService {
   }
 
   Future<void> sendPasswordReset(String email) async {
-    await _client.auth.resetPasswordForEmail(email);
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'io.supabase.unideal://login-callback/',
+    );
   }
 
   Future<Map<String, dynamic>?> getProfile(String userId) async {
