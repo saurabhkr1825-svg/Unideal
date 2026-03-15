@@ -32,7 +32,7 @@ class LiveAuctionCard extends StatelessWidget {
          final isEnded = auctionRaw['status'] != 'active' || DateTime.now().isAfter(endTime);
          final Duration remaining = isEnded ? Duration.zero : endTime.difference(DateTime.now());
          
-         if (isEnded) return const SizedBox.shrink();
+         // if (isEnded) return const SizedBox.shrink();
          
          return GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
@@ -51,14 +51,27 @@ class LiveAuctionCard extends StatelessWidget {
                      children: [
                        ClipRRect(
                          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusM)),
-                         child: product.imageUrl != null 
-                            ? Image.network(product.imageUrl!, height: 110, width: 160, fit: BoxFit.cover)
-                            : Container(height: 110, width: 160, color: Colors.indigo[50], child: Icon(Icons.image_not_supported, color: Colors.indigo[200])),
+                         child: Opacity(
+                            opacity: isEnded ? 0.6 : 1.0,
+                            child: product.imageUrl != null 
+                              ? Image.network(product.imageUrl!, height: 110, width: 160, fit: BoxFit.cover)
+                              : Container(height: 110, width: 160, color: Colors.indigo[50], child: Icon(Icons.image_not_supported, color: Colors.indigo[200])),
+                         ),
                        ),
                        Positioned(
                          top: AppTheme.spacingSm, left: AppTheme.spacingSm,
                          child: ItemBadge.auction(),
-                       )
+                       ),
+                       if (isEnded)
+                         Positioned.fill(
+                           child: Center(
+                             child: Container(
+                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                               decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(20)),
+                               child: const Text('CLOSED', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                             ),
+                           ),
+                         )
                      ],
                    ),
                    Padding(
@@ -72,9 +85,9 @@ class LiveAuctionCard extends StatelessWidget {
                          const SizedBox(height: AppTheme.spacingXs),
                          Row(
                            children: [
-                             Icon(Icons.timer, size: 12, color: Colors.red[700]),
+                             Icon(isEnded ? Icons.timer_off : Icons.timer, size: 12, color: Colors.red[700]),
                              const SizedBox(width: AppTheme.spacingXs),
-                             Text('${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left', style: AppTheme.smallInfoStyle.copyWith(color: Colors.red[700], fontWeight: FontWeight.bold)),
+                             Text(isEnded ? 'Auction Closed' : '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left', style: AppTheme.smallInfoStyle.copyWith(color: Colors.red[700], fontWeight: FontWeight.bold)),
                            ],
                          ),
                        ]

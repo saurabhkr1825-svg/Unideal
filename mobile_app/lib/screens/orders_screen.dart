@@ -102,13 +102,13 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: tx.status == 'completed' ? Colors.green[50] : Colors.orange[50],
+                        color: tx.status == 'completed' ? Colors.green[50] : (tx.status.contains('rejected') || tx.status == 'failed' ? Colors.red[50] : Colors.orange[50]),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        tx.status.toUpperCase(),
+                        tx.status.replaceAll('_', ' ').toUpperCase(),
                         style: TextStyle(
-                          color: tx.status == 'completed' ? Colors.green[700] : Colors.orange[700],
+                          color: tx.status == 'completed' ? Colors.green[700] : (tx.status.contains('rejected') || tx.status == 'failed' ? Colors.red[700] : Colors.orange[700]),
                           fontWeight: FontWeight.bold,
                           fontSize: 10,
                         ),

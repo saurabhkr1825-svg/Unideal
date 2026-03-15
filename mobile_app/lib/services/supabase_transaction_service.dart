@@ -173,9 +173,11 @@ class SupabaseTransactionService {
       } else if (status == 'pending') {
         notifTitle = 'Payment Verified';
         notifMsg = 'Your payment for "$title" has been verified. Your delivery OTP is now visible in My Orders.';
-      } else if (status == 'rejected' || status == 'failed') {
-        notifTitle = 'Payment Rejected';
-        notifMsg = 'Your payment for "$title" was rejected by admin. Please contact support.';
+      } else if (status == 'rejected' || status == 'failed' || status == 'rejected_by_admin' || status == 'rejected_by_donor') {
+        notifTitle = 'Transaction Rejected';
+        notifMsg = status == 'rejected_by_donor' 
+            ? 'The donor has rejected your claim for "$title".' 
+            : 'Your claim for "$title" was rejected by admin. Please contact support.';
       }
 
       await SupabaseNotificationService().createNotification(

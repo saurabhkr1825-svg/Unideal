@@ -168,7 +168,7 @@ class _AdminDonationPanelState extends State<AdminDonationPanel> {
                               children: [
                                 Expanded(
                                   child: OutlinedButton(
-                                    onPressed: () => _updateStatus(req.id, 'failed', req.userId, req.itemTitle ?? 'Item', donationId: req.donationId),
+                                    onPressed: () => _updateStatus(req.id, 'rejected_by_admin', req.userId, req.itemTitle ?? 'Item', donationId: req.donationId),
                                     child: Text('Reject'),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.red,

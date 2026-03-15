@@ -1006,10 +1006,10 @@ class ProfileTab extends StatelessWidget {
                 _buildProfileItem(Icons.receipt_long_outlined, 'My Orders', 'Items you\'ve purchased', () {
                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => OrdersScreen()));
                 }),
-                _buildProfileItem(Icons.shopping_bag_outlined, 'My Listings', 'Manage your marketplace items', () {
+                _buildProfileItem(Icons.shopping_bag_outlined, 'Seller\'s Dashboard', 'Manage your marketplace items', () {
                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SalesDashboardScreen()));
                 }),
-                _buildProfileItem(Icons.favorite_outline, 'My Donations', 'Items you\'ve given away', () {
+                _buildProfileItem(Icons.favorite_outline, 'My Listings', 'Items you\'ve given away', () {
                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => MyDonationsScreen()));
                 }),
                 _buildProfileItem(Icons.how_to_reg, 'Manage Claim Requests', 'Approve/Reject requests for your items', () {
@@ -1028,8 +1028,13 @@ class ProfileTab extends StatelessWidget {
                   }),
                 ],
                 _buildProfileItem(Icons.chat_bubble_outline, 'My Chats', 'Recent conversations', () {
-                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Switching to Chat Tab...')));
-                   // Logic to switch tab could be added here if needed
+                   // Navigate to Messages tab (Index 2 in the bottom nav bar is MessagesTab)
+                   final rootHomeScreenState = context.findAncestorStateOfType<_HomeScreenState>();
+                   if (rootHomeScreenState != null) {
+                       rootHomeScreenState.setState(() {
+                         rootHomeScreenState._selectedIndex = 2;
+                       });
+                   }
                 }),
                 
                 SizedBox(height: 32),
