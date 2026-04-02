@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/membership_request_model.dart';
 import 'supabase_notification_service.dart';
@@ -13,14 +13,15 @@ class SupabaseMembershipService {
     required double amount,
     required String txnId,
     String? utrNumber,
-    required File screenshot,
+    required Uint8List screenshotBytes,
+    required String fileName,
   }) async {
     try {
       final userId = _client.auth.currentUser?.id;
       if (userId == null) throw Exception('User not logged in');
 
       // 1. Upload screenshot
-      final screenshotUrl = await _storageService.uploadDonationImage(screenshot);
+      final screenshotUrl = await _storageService.uploadDonationImage(screenshotBytes, fileName);
 
       // 2. Insert request record
       await _client.from('membership_requests').insert({

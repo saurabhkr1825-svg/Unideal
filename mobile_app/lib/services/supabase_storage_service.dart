@@ -1,17 +1,17 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseStorageService {
   final SupabaseClient _client = Supabase.instance.client;
 
-  Future<String> uploadDonationImage(File imageFile) async {
+  Future<String> uploadDonationImage(Uint8List bytes, String fileName) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
-      final path = fileName;
+      final extension = fileName.split('.').last;
+      final path = '${DateTime.now().millisecondsSinceEpoch}.$extension';
 
-      await _client.storage.from('donations').upload(
+      await _client.storage.from('donations').uploadBinary(
         path,
-        imageFile,
+        bytes,
         fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
       );
 
@@ -22,8 +22,11 @@ class SupabaseStorageService {
     }
   }
 
-  Future<List<String>> uploadMultipleImages(List<File> images) async {
-    final futures = images.map((image) => uploadDonationImage(image));
+  Future<List<String>> uploadMultipleImages(List<Uint8List> imagesBytes, List<String> fileNames) async {
+    final List<Future<String>> futures = [];
+    for (int i = 0; i < imagesBytes.length; i++) {
+      futures.add(uploadDonationImage(imagesBytes[i], fileNames[i]));
+    }
     return await Future.wait(futures);
   }
 }

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../services/supabase_product_service.dart';
 import '../services/supabase_storage_service.dart';
@@ -45,14 +45,15 @@ class ProductProvider with ChangeNotifier {
     required String category,
     required String condition,
     required String donorId,
-    required File image,
+    required Uint8List imageBytes,
+    required String fileName,
     required bool isAuction,
     double price = 0.0,
   }) async {
     _setLoading(true);
     try {
       // 1. Upload Image
-      final imageUrl = await _storageService.uploadDonationImage(image);
+      final imageUrl = await _storageService.uploadDonationImage(imageBytes, fileName);
 
       // 2. Create Donation
       final productId = await _productService.uploadProduct(

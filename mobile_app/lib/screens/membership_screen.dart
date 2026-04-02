@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,21 +17,26 @@ class MembershipScreen extends StatefulWidget {
 class _MembershipScreenState extends State<MembershipScreen> {
   final SupabaseMembershipService _membershipService = SupabaseMembershipService();
   final TextEditingController _txnController = TextEditingController();
-  File? _screenshot;
+  Uint8List? _screenshotBytes;
+  String? _fileName;
+  String? _imagePath;
   bool _isSubmitting = false;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _screenshot = File(pickedFile.path);
+        _screenshotBytes = bytes;
+        _fileName = pickedFile.name;
+        _imagePath = pickedFile.path;
       });
     }
   }
 
   Future<void> _submitRequest() async {
-    if (_screenshot == null) {
+    if (_screenshotBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a screenshot')));
       return;
     }
@@ -46,7 +52,8 @@ class _MembershipScreenState extends State<MembershipScreen> {
         amount: AppConstants.membershipPrice,
         txnId: _txnController.text.trim(),
         utrNumber: _txnController.text.trim(),
-        screenshot: _screenshot!,
+        screenshotBytes: _screenshotBytes!,
+        fileName: _fileName ?? 'screenshot.jpg',
       );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -168,7 +175,7 @@ class _MembershipScreenState extends State<MembershipScreen> {
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(color: Colors.indigo.withOpacity(0.1)),
                       ),
-                      child: _screenshot == null
+                      child: _screenshotBytes == null
                           ? Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -179,7 +186,9 @@ class _MembershipScreenState extends State<MembershipScreen> {
                             )
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(15),
-                              child: Image.file(_screenshot!, fit: BoxFit.cover),
+                              child: kIsWeb 
+                                ? Image.network(_imagePath!, fit: BoxFit.cover)
+                                : Image.memory(_screenshotBytes!, fit: BoxFit.cover),
                             ),
                     ),
                   ),

@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -24,21 +25,26 @@ class _SellItemScreenState extends State<SellItemScreen> {
   String _condition = 'Good';
   int _auctionDurationHours = 24;
 
-  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
+  String? _fileName;
+  String? _imagePath;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (image != null) {
+      final bytes = await image.readAsBytes();
       setState(() {
-        _selectedImage = File(image.path);
+        _selectedImageBytes = bytes;
+        _fileName = image.name;
+        _imagePath = image.path;
       });
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImage == null) {
+    if (_selectedImageBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a product photo'), backgroundColor: Colors.orange));
       return;
     }
@@ -57,7 +63,8 @@ class _SellItemScreenState extends State<SellItemScreen> {
         category: _category,
         condition: _condition,
         donorId: user.id, 
-        image: _selectedImage!,
+        imageBytes: _selectedImageBytes!,
+        fileName: _fileName ?? 'image.jpg',
         isAuction: _listingType == 'Auction',
         price: priceVal,
       );
@@ -130,8 +137,13 @@ class _SellItemScreenState extends State<SellItemScreen> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.indigo.withOpacity(0.1), width: 2),
                   ),
-                  child: _selectedImage != null
-                      ? ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(_selectedImage!, fit: BoxFit.cover))
+                  child: _selectedImageBytes != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(18), 
+                          child: kIsWeb 
+                            ? Image.network(_imagePath!, fit: BoxFit.cover)
+                            : Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
+                        )
                       : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
