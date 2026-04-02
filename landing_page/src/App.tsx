@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, RefObject } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './App.css';
 
 // Hook for scroll animation
