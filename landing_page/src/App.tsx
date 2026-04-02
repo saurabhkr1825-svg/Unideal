@@ -70,8 +70,12 @@ function App() {
         <div className="container hero-content fade-up" ref={setRef}>
           <div className="badge">v2.0 Beta Live ✨</div>
           <h1><span className="text-gradient">Unideal</span></h1>
-          <p>
-            Smart solutions for everyday problems. Experience the next generation of fast, seamless, and secure peer-to-peer commerce.
+          <p style={{ fontSize: '1.2rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+            From Seniors to Freshers — Smarter Campus Marketplace
+          </p>
+          <p style={{ marginBottom: '2rem' }}>
+            Buy, sell, or donate essentials within your campus.<br />
+            Save money, reduce waste, and help your juniors.
           </p>
           <div className="hero-buttons">
             <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/download/v1.0/unideal.apk" target="_blank" rel="noopener noreferrer" className="btn btn-primary fade-up stagger-1" ref={setRef}>
@@ -82,90 +86,123 @@ function App() {
               </svg>
               Download APK
             </a>
-            <a href="https://unideal-app.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-outline fade-up stagger-2" ref={setRef}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              Use Web App
-            </a>
           </div>
         </div>
       </section>
 
-      {/* App Preview Section */}
-      <section id="preview" className="app-preview container">
-        <div className="section-header fade-up" ref={setRef}>
-          <h2>See It In Action</h2>
-          <p>A beautiful native experience right in your hands.</p>
-        </div>
-        <div className="phone-mockup fade-up stagger-1" ref={setRef}>
-          <div className="phone-screen">
-            {/* Mocking a beautiful app screen */}
-            <div className="screen-header"></div>
-            <div className="screen-card" style={{ height: '120px', flex: 'none' }}></div>
-            <div className="screen-card"></div>
-            <div className="screen-card"></div>
-            <div className="screen-btn"></div>
+      {/* Problem Section */}
+      <section id="problem" className="about-section fade-up" ref={setRef}>
+        <div className="container">
+          <div className="section-header">
+            <h2>The Problem</h2>
+            <p style={{ maxWidth: '800px', margin: '0 auto', color: 'var(--text-secondary)' }}>
+              Every year, final-year students leave campus with useful items they no longer need —<br/>
+              books, mattresses, buckets, lab equipment, and more.
+            </p>
           </div>
+          <p style={{ maxWidth: '800px', margin: '0 auto', fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
+            At the same time, first-year students arrive and spend thousands buying the same items. There is no simple platform to connect them. As a result:
+          </p>
+          <div className="features-grid" style={{ marginTop: '2.5rem' }}>
+            <div className="feature-card glass-panel stagger-1 fade-up" ref={setRef} style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div className="feature-icon" style={{ color: '#ff4b4b' }}>❌</div>
+              <h3 style={{ marginBottom: 0 }}>Items go to waste</h3>
+            </div>
+            <div className="feature-card glass-panel stagger-2 fade-up" ref={setRef} style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div className="feature-icon" style={{ color: '#ff4b4b' }}>❌</div>
+              <h3 style={{ marginBottom: 0 }}>Juniors overspend</h3>
+            </div>
+            <div className="feature-card glass-panel stagger-3 fade-up" ref={setRef} style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <div className="feature-icon" style={{ color: '#ff4b4b' }}>❌</div>
+              <h3 style={{ marginBottom: 0 }}>No trusted student marketplace</h3>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Solution Section */}
+      <section id="solution" className="app-preview container fade-up" ref={setRef} style={{ paddingBottom: '2rem' }}>
+        <div className="section-header">
+          <h2>Our Solution</h2>
+          <p>Unideal connects students within campuses to create a trusted marketplace.</p>
+        </div>
+        <div className="features-grid">
+          <div className="feature-card glass-panel fade-up stagger-1" ref={setRef}>
+            <div className="feature-icon">📦</div>
+            <h3>Sell easily</h3>
+            <p>Sell your used items easily without any hassle.</p>
+          </div>
+          <div className="feature-card glass-panel fade-up stagger-2" ref={setRef}>
+            <div className="feature-icon">💸</div>
+            <h3>Low prices</h3>
+            <p>Buy essentials at incredibly low prices.</p>
+          </div>
+          <div className="feature-card glass-panel fade-up stagger-3" ref={setRef}>
+            <div className="feature-icon">🎁</div>
+            <h3>Donate</h3>
+            <p>Donate items to help your juniors in need.</p>
+          </div>
+          <div className="feature-card glass-panel fade-up stagger-4" ref={setRef}>
+            <div className="feature-icon">🏫</div>
+            <h3>Campus-specific</h3>
+            <p>Campus-based connections ensuring complete safety and trust.</p>
+          </div>
+        </div>
+        
+        <div className="fade-up" ref={setRef} style={{ textAlign: 'center', marginTop: '4rem', padding: '2rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <p style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: 0, color: 'var(--text-primary)' }}>
+            Built <span className="text-gradient">by students</span>, <span className="text-gradient">for students</span>.
+          </p>
         </div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="features container">
         <div className="section-header fade-up" ref={setRef}>
-          <h2>Why Choose Unideal?</h2>
-          <p>Built with cutting-edge tech for the ultimate marketplace experience.</p>
+          <h2>Features & Why Choose Unideal?</h2>
+          <p>Everything you need for a seamless trading experience.</p>
         </div>
-        
         <div className="features-grid">
           <div className="feature-card glass-panel fade-up stagger-1" ref={setRef}>
-            <div className="feature-icon">⚡</div>
-            <h3>Fast</h3>
-            <p>Lightning-fast speeds. Our Supabase-powered backend ensures items are listed and updated instantly without any lag.</p>
+            <div className="feature-icon">🔍</div>
+            <h3>Easy Search & Listing</h3>
+            <p>Find what you need instantly or list your items in seconds.</p>
           </div>
           <div className="feature-card glass-panel fade-up stagger-2" ref={setRef}>
-            <div className="feature-icon">✨</div>
-            <h3>Simple UI</h3>
-            <p>A clean, intuitive interface that makes buying, selling, and managing your items effortless and enjoyable.</p>
+            <div className="feature-icon">💬</div>
+            <h3>Direct Chat</h3>
+            <p>Secure, direct chat between students to coordinate handoffs.</p>
           </div>
           <div className="feature-card glass-panel fade-up stagger-3" ref={setRef}>
-            <div className="feature-icon">🛠️</div>
-            <h3>Smart Tools</h3>
-            <p>Built-in QR code transaction verification and dynamic bidding systems make trading simple and completely secure.</p>
+            <div className="feature-icon">💰</div>
+            <h3>Save Money & Reduce Waste</h3>
+            <p>Save money as a student while reducing overall waste on your campus.</p>
           </div>
           <div className="feature-card glass-panel fade-up stagger-4" ref={setRef}>
-            <div className="feature-icon">🎈</div>
-            <h3>Lightweight</h3>
-            <p>Developed entirely in Flutter, the app takes up minimal space while delivering native performance down to 60fps.</p>
+            <div className="feature-icon">🤝</div>
+            <h3>Build Community</h3>
+            <p>Fast, secure, and incredibly easy to use while building local student connections.</p>
           </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section id="about" className="about-section fade-up" ref={setRef}>
-        <div className="container">
-          <div className="section-header">
-            <h2>About The Project</h2>
-            <p>An innovative idea brought to life.</p>
-          </div>
-          <p style={{ maxWidth: '800px', margin: '0 auto', fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
-            Unideal is a student-built project aiming to solve everyday commerce problems. We believe in providing smart, lightweight, and incredibly fast tools that empower people to trade seamlessly. From secure handoffs to real-time auctioning, Unideal is the marketplace created with true user needs in mind.
-          </p>
         </div>
       </section>
 
       {/* Call To Action */}
       <section id="download" className="cta-section fade-up" ref={setRef}>
         <div className="container">
-          <h2>Ready to upgrade your trading experience?</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '1.1rem' }}>
-            Download the app today or launch the web version instantly.
+          <h2>Start Using Unideal Today</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '1.2rem' }}>
+            Join your campus marketplace now. <br/>
+            <b>Built by students, for students.</b>
           </p>
           <div className="hero-buttons">
-            <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/download/v1.0/unideal.apk" target="_blank" rel="noopener noreferrer" className="btn btn-primary">Download APK</a>
-            <a href="https://unideal-app.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-outline">Start Web App</a>
+            <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/download/v1.0/unideal.apk" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ margin: '0 auto' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download APK
+            </a>
           </div>
         </div>
       </section>
