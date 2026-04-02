@@ -124,17 +124,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (_) => SearchUserScreen()));
-          _loadChatRooms();
-        },
-        backgroundColor: const Color(0xFF4F85F6),
-        elevation: 8,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
