@@ -1,5 +1,5 @@
 {
-  "buildCommand": "bash build.sh",
+  "buildCommand": "echo 'Skipping build, using pre-built files'",
   "outputDirectory": "build/web",
   "framework": null,
   "rewrites": [
