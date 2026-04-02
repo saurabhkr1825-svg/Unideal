@@ -40,21 +40,115 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
+    
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F7FF), // Extremely light blue backdrop
+      body: Stack(
+        children: [
+          // Background Gradient Array Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 300,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF8faaff), // Vibrant blue top
+                    Color(0xFFC7D6FF), // Lighter blue middle
+                    Color(0xFFF4F7FF), // Fade to scaffold bg
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          SafeArea(
+            child: Column(
+              children: [
+                // Minimal Header Name
+                const Padding(
+                  padding: EdgeInsets.only(top: 10, bottom: 20),
+                  child: Center(
+                    child: Text(
+                      'Chat',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // White Top-Rounding Container
+                Expanded(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias, // Ensures internal list stays in rounded corners
+                    child: _chatRooms.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadChatRooms,
+                            child: ListView.separated(
+                              padding: const EdgeInsets.only(top: 24, bottom: 100), // padding for FAB
+                              itemCount: _chatRooms.length,
+                              separatorBuilder: (context, index) => const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 24),
+                                child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+                              ),
+                              itemBuilder: (ctx, i) {
+                                return _buildChatTile(_chatRooms[i]);
+                              },
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await Navigator.push(context, MaterialPageRoute(builder: (_) => SearchUserScreen()));
+          _loadChatRooms();
+        },
+        backgroundColor: const Color(0xFF4F85F6),
+        elevation: 8,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
 
-    if (_chatRooms.isEmpty) {
-      return Center(
+  Widget _buildEmptyState() {
+     return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[300]),
-            SizedBox(height: 16),
+            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.indigo.withOpacity(0.2)),
+            const SizedBox(height: 16),
             Text(
               'No conversations yet',
-              style: TextStyle(color: Colors.grey[600], fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.grey[800], fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Start chatting from product details!',
               style: TextStyle(color: Colors.grey[500]),
@@ -62,108 +156,110 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ],
         ),
       );
-    }
+  }
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: _loadChatRooms,
-        child: ListView.separated(
-          itemCount: _chatRooms.length,
-          separatorBuilder: (context, index) => Divider(height: 1, indent: 80),
-          itemBuilder: (ctx, i) {
-            final room = _chatRooms[i];
-            return ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Hero(
-                tag: 'chat-avatar-${room.id}',
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        image: room.donationImageUrl != null
-                            ? DecorationImage(
-                                image: NetworkImage(room.donationImageUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                        color: Colors.indigo[50],
-                      ),
-                      child: room.donationImageUrl == null
-                          ? Icon(Icons.volunteer_activism, color: Colors.indigo)
-                          : null,
-                    ),
-                    if (room.otherUserStatus == 'online')
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                        ),
-                      ),
-                  ],
+  Widget _buildChatTile(ChatRoom room) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      leading: Hero(
+        tag: 'chat-avatar-${room.id}',
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.indigo[50],
+                image: room.donationImageUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(room.donationImageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: room.donationImageUrl == null
+                  ? const Icon(Icons.person, color: Colors.indigo, size: 26)
+                  : null,
+            ),
+            if (room.otherUserStatus == 'online')
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4ade80),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
               ),
-              title: Text(
-                room.donationTitle ?? 'Item Chat',
-                style: TextStyle(fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'With: ${room.otherUserName}',
-                    style: TextStyle(color: Colors.indigo, fontSize: 13),
-                  ),
-                  if (room.lastMessage != null)
-                    Text(
-                      room.lastMessage!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                ],
-              ),
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ChatDetailScreen(
-                      otherUserId: room.otherUserId,
-                      otherUserEmail: room.otherUserName,
-                      donationId: room.donationId,
-                      donationTitle: room.donationTitle,
-                      donationImageUrl: room.donationImageUrl,
-                    ),
-                  ),
-                );
-                _loadChatRooms(); // Refresh when coming back
-              },
-            );
-          },
+          ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => SearchUserScreen()),
-          );
-          _loadChatRooms();
-        },
-        backgroundColor: Colors.indigo,
-        child: Icon(Icons.search, color: Colors.white),
-        tooltip: 'Search Users',
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              room.otherUserName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.verified, color: Color(0xFF4F85F6), size: 14),
+        ],
       ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 3),
+          Text(
+            room.donationTitle ?? 'Item Discussion',
+            style: const TextStyle(color: Color(0xFF4F85F6), fontSize: 12, fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          if (room.lastMessage != null)
+            Text(
+              room.lastMessage!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
+        ],
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text('12:00 PM', style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: const BoxDecoration(
+              color: Color(0xFF4F85F6),
+              shape: BoxShape.circle,
+            ),
+            child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ChatDetailScreen(
+              otherUserId: room.otherUserId,
+              otherUserEmail: room.otherUserName,
+              donationId: room.donationId,
+              donationTitle: room.donationTitle,
+              donationImageUrl: room.donationImageUrl,
+            ),
+          ),
+        );
+        _loadChatRooms(); // Refresh when coming back
+      },
     );
   }
 }

@@ -171,26 +171,54 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final isMember = user?.membershipStatus ?? false;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7FF), // Extremely light blue backdrop
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: Colors.white24,
-              child: Text(widget.otherUserEmail[0].toUpperCase(), style: TextStyle(color: Colors.white)),
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.indigo[50], // Very light blue
+                  child: Text(widget.otherUserEmail[0].toUpperCase(), style: const TextStyle(color: Color(0xFF4F85F6), fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+                if (_otherUserStatus == 'online')
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4ade80),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+              ],
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.otherUserEmail, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      Flexible(
+                         child: Text(widget.otherUserEmail, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.verified, color: Color(0xFF4F85F6), size: 14),
+                    ],
+                  ),
                   _otherUserStatus == 'online'
-                    ? Text('🟢 Online', style: TextStyle(fontSize: 11, color: Colors.greenAccent))
+                    ? const Text('Online', style: TextStyle(fontSize: 11, color: Color(0xFF4F85F6), fontWeight: FontWeight.w600))
                     : Text(
                         _otherUserLastSeen != null 
                           ? 'Last seen ${DateFormat('h:mm a').format(_otherUserLastSeen!)}'
                           : 'Offline',
-                        style: TextStyle(fontSize: 11, color: Colors.white70),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                       ),
                 ],
               ),
@@ -199,6 +227,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.black87),
             onSelected: (value) async {
               if (value == 'report') {
                 _showReportDialog();
@@ -207,8 +236,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: 'report', child: Text('Report User')),
-              PopupMenuItem(value: 'block', child: Text('Block User')),
+              const PopupMenuItem(value: 'report', child: Text('Report User')),
+              const PopupMenuItem(value: 'block', child: Text('Block User')),
             ],
           ),
         ],
@@ -277,32 +306,45 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Widget _buildProductContext() {
-    if (widget.donationTitle == null) return SizedBox.shrink();
+    if (widget.donationTitle == null) return const SizedBox.shrink();
     return Container(
-      padding: EdgeInsets.all(8),
-      color: Colors.grey[100],
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           if (widget.donationImageUrl != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.network(widget.donationImageUrl!, width: 40, height: 40, fit: BoxFit.cover),
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(widget.donationImageUrl!, width: 48, height: 48, fit: BoxFit.cover),
             ),
-          SizedBox(width: 10),
+          if (widget.donationImageUrl == null)
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(color: Colors.indigo[50], borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.inventory_2, color: Color(0xFF4F85F6), size: 24),
+            ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.donationTitle!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('Interested in this item', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                Text(widget.donationTitle!, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 3),
+                Text('Listed Item', style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w500)),
               ],
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              // Navigate back to product detail or show dialog
-            },
-            child: Text('View Item', style: TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -367,56 +409,66 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         children: [
           Container(
             margin: EdgeInsets.only(
-              top: 8,
+              top: 6,
               bottom: 2,
-              left: isMe ? 50 : 0,
-              right: isMe ? 0 : 50,
+              left: isMe ? 60 : 0,
+              right: isMe ? 0 : 60,
             ),
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isMe ? Colors.indigo : Colors.grey[200],
+              gradient: isMe ? const LinearGradient(
+                colors: [Color(0xFF759DFF), Color(0xFF4F85F6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ) : null,
+              color: isMe ? null : Colors.white,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: isMe ? Radius.circular(16) : Radius.circular(0),
-                bottomRight: isMe ? Radius.circular(0) : Radius.circular(16),
+                topLeft: const Radius.circular(20),
+                topRight: const Radius.circular(20),
+                bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(4),
+                bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(20),
               ),
+              boxShadow: !isMe ? [
+                 BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))
+              ] : [],
             ),
             child: msg.messageType == 'image' && msg.imageUrl != null
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(msg.imageUrl!, width: 200, fit: BoxFit.contain),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(msg.imageUrl!, width: 220, fit: BoxFit.contain),
                     ),
-                    if (msg.message != '[Image]')
+                    if (msg.message != '[Image]') ...[
+                      const SizedBox(height: 8),
                       Text(
                         msg.message,
-                        style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 16),
+                        style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 14),
                       ),
+                    ]
                   ],
                 )
               : Text(
                   msg.message,
-                  style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 16),
+                  style: TextStyle(color: isMe ? Colors.white : Colors.black87, fontSize: 14),
                 ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   time,
-                  style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                  style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w600),
                 ),
                 if (isMe) ...[
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Icon(
-                    msg.status == 'read' ? Icons.done_all : Icons.done,
-                    size: 12,
-                    color: msg.status == 'read' ? Colors.blue : Colors.grey[500],
+                    msg.status == 'read' ? Icons.done_all : Icons.check, // Double checkmark logic
+                    size: 14,
+                    color: msg.status == 'read' ? const Color(0xFF4ade80) : Colors.grey[400],
                   ),
                 ],
               ],
@@ -431,12 +483,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final isLocked = !isMember && sentCount >= _messageLimit;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, -2))
-        ]
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF4F7FF), // Matches scaffold background
       ),
       child: SafeArea(
         child: isLocked 
@@ -446,47 +495,80 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => MembershipScreen()));
                 },
-                icon: Icon(Icons.star, size: 18),
-                label: Text('Unlock Unlimited Chats (₹99/mo)'),
+                icon: const Icon(Icons.star, size: 18),
+                label: const Text('Unlock Unlimited Chats (₹99/mo)'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo,
+                  backgroundColor: const Color(0xFF4F85F6),
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 6,
                 ),
               ),
             )
           : Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    onChanged: _onTypingChanged,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      prefixIcon: IconButton(
-                        icon: Icon(Icons.attach_file, color: Colors.indigo),
-                        onPressed: () => _pickImage(sentCount, isMember),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      fillColor: Colors.grey[100],
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                         BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+                      ]
                     ),
-                    onSubmitted: (_) => _sendMessage(sentCount, isMember),
+                    child: TextField(
+                      controller: _messageController,
+                      onChanged: _onTypingChanged,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: 'Message',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        prefixIcon: IconButton(
+                          icon: Icon(Icons.attach_file, color: Colors.grey[500], size: 22),
+                          onPressed: () => _pickImage(sentCount, isMember),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.camera_alt_outlined, color: Colors.grey[500], size: 22),
+                          onPressed: () => _pickImage(sentCount, isMember),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
+                        fillColor: Colors.transparent,
+                        filled: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      ),
+                      onSubmitted: (_) => _sendMessage(sentCount, isMember),
+                    ),
                   ),
                 ),
-                SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(color: Colors.indigo, shape: BoxShape.circle),
-                  child: IconButton(
-                    icon: Icon(Icons.send, color: Colors.white, size: 20),
-                    onPressed: () => _sendMessage(sentCount, isMember),
-                  ),
+                const SizedBox(width: 8),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _messageController,
+                  builder: (context, value, child) {
+                    final hasText = value.text.trim().isNotEmpty;
+                    return Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4F85F6), 
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                           BoxShadow(color: const Color(0xFF4F85F6).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+                        ]
+                      ),
+                      child: IconButton(
+                        icon: Icon(hasText ? Icons.send : Icons.mic, color: Colors.white, size: 22),
+                        onPressed: () {
+                          if (hasText) {
+                             _sendMessage(sentCount, isMember);
+                          }
+                        },
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
