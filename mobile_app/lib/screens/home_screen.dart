@@ -32,7 +32,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  String _currentFilter = 'all'; // all, buy, donate, auction, rent
+  String _currentFilter = 'all';
 
   @override
   void initState() {
@@ -42,283 +42,68 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onTabTapped(int index) {
-    if (index == 4) { // Profile Tab
+    if (index == 3) {
       Provider.of<AuthProvider>(context, listen: false).reloadUser();
     }
     setState(() {
       _currentIndex = index;
-      if (index == 1) {
-        _currentFilter = 'all'; // Reset filter when tapping Browse manually
-      }
-    });
-  }
-
-  void _navigateToBrowse(String filter) {
-    setState(() {
-      _currentFilter = filter;
-      _currentIndex = 1; // Switch to Browse tab
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // We can use a switch or list of widgets. Since we need to pass state (filter) to BrowseTab,
-    // a switch or method is better than a const list.
     Widget bodyContent;
     switch (_currentIndex) {
       case 0:
-        // Changed "Home" button to always browse
-        bodyContent = HomeDashboard(onNavigate: _navigateToBrowse, onSellTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => SellItemScreen()));
-        });
+        bodyContent = BrowseTab(filter: _currentFilter);
         break;
       case 1:
-        bodyContent = BrowseTab(filter: _currentFilter ?? 'All');
-        break;
-      case 2:
         bodyContent = ChatListScreen();
         break;
-      case 3:
+      case 2:
         bodyContent = OrdersScreen();
         break;
-      case 4:
+      case 3:
         bodyContent = ProfileTab();
         break;
       default:
-        bodyContent = HomeDashboard(onNavigate: _navigateToBrowse, onSellTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => SellItemScreen()));
-        });
+        bodyContent = BrowseTab(filter: _currentFilter);
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(child: bodyContent),
-      bottomNavigationBar: Container(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Container(
         decoration: BoxDecoration(
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.blueAccent.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4))
+          ]
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Colors.indigo[700],
-          unselectedItemColor: Colors.grey[400],
-          showUnselectedLabels: true,
-          selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          unselectedLabelStyle: TextStyle(fontSize: 12),
+        child: FloatingActionButton(
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SellItemScreen())),
+          backgroundColor: Colors.blueAccent[700],
           elevation: 0,
-          backgroundColor: Colors.white,
-          items: [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.search_outlined), activeIcon: Icon(Icons.search), label: 'Browse'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), activeIcon: Icon(Icons.chat_bubble), label: 'Messages'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), activeIcon: Icon(Icons.receipt_long), label: 'Orders'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
-          ],
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white, size: 32),
         ),
       ),
-    );
-  }
-}
-
-class HomeDashboard extends StatelessWidget {
-  final Function(String) onNavigate;
-  final VoidCallback onSellTap;
-
-  HomeDashboard({required this.onNavigate, required this.onSellTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).user;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Premium Hero Section
-          Container(
-            padding: EdgeInsets.fromLTRB(24, 60, 24, 40),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.indigo[900]!, Colors.indigo[600]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-              boxShadow: [
-                 BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 20, offset: Offset(0, 10))
-              ]
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Hello, ${user?.fullName ?? "there"}!', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                        Text('Welcome Back 👋', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    _buildNotificationIcon(),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Explore Services', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-                SizedBox(height: 20),
-                
-                // Primary Actions Grid
-                Row(
-                  children: [
-                    _buildServiceCard(
-                      context,
-                      'Donate',
-                      'Give away items',
-                      Icons.favorite_border,
-                      Colors.pink[400]!,
-                      () => onNavigate('donate'),
-                    ),
-                    SizedBox(width: 16),
-                    _buildServiceCard(
-                      context,
-                      'Auction',
-                      'Bid to win',
-                      Icons.gavel_outlined,
-                      Colors.orange[400]!,
-                      () => onNavigate('auction'),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildServiceCard(
-                      context,
-                      'List Item',
-                      'Start selling',
-                      Icons.add_shopping_cart,
-                      Colors.blue[400]!,
-                      onSellTap,
-                    ),
-                    SizedBox(width: 16),
-                     _buildServiceCard(
-                      context,
-                      'Browse',
-                      'Find items',
-                      Icons.search,
-                      Colors.indigo[400]!,
-                      () => onNavigate('all'),
-                    ),
-                  ],
-                ),
-                
-                Consumer<ProductProvider>(
-                  builder: (context, productProvider, _) {
-                    final auctionProducts = productProvider.products.where((p) => p.isAuction).toList();
-                    if (auctionProducts.isEmpty) return SizedBox.shrink();
-                    
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 35),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Live Auctions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                            TextButton(onPressed: () => onNavigate('auction'), child: Text('View All'))
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        SizedBox(
-                          height: 220,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: auctionProducts.length,
-                            itemBuilder: (ctx, i) {
-                               return LiveAuctionCard(product: auctionProducts[i]);
-                            }
-                          )
-                        )
-                      ]
-                    );
-                  }
-                ),
-
-                SizedBox(height: 35),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Community Activity', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    TextButton(onPressed: () => onNavigate('all'), child: Text('View All'))
-                  ],
-                ),
-                Consumer<ProductProvider>(
-                  builder: (context, productProvider, _) {
-                    if (productProvider.isLoading) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    if (productProvider.products.isEmpty) {
-                      return Center(child: Text('No recent activity.'));
-                    }
-                    final recentProducts = productProvider.products.take(3).toList();
-                    return Column(
-                      children: recentProducts.map((product) {
-                        return _buildActivityCard(
-                          product.isAuction ? 'Auction: ${product.title}' : (product.price == 0 ? 'Donation: ${product.title}' : 'Sale: ${product.title}'),
-                          '${product.category} • ₹${product.price}',
-                          product.isAuction ? Icons.gavel_outlined : (product.price == 0 ? Icons.favorite_border : Icons.shopping_bag_outlined),
-                          product.isAuction ? Colors.purple : (product.price == 0 ? Colors.green : Colors.blue),
-                          onTap: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)));
-                          }
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-                SizedBox(height: 30),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildServiceCard(BuildContext context, String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: Offset(0, 4))
-            ],
-            border: Border.all(color: Colors.grey.shade100),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 10.0,
+        color: Colors.white,
+        elevation: 10,
+        child: SizedBox(
+          height: 65,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              SizedBox(height: 16),
-              Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              _buildNavItem(Icons.home_outlined, Icons.home, 'Home', 0),
+              _buildNavItem(Icons.chat_bubble_outline, Icons.chat_bubble, 'Chats', 1),
+              const SizedBox(width: 48), // Space for FAB
+              _buildNavItem(Icons.receipt_long_outlined, Icons.receipt_long, 'Orders', 2),
+              _buildNavItem(Icons.person_outline, Icons.person, 'Account', 3),
             ],
           ),
         ),
@@ -326,74 +111,31 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityCard(String title, String subtitle, IconData icon, Color iconColor, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade100),
-        ),
-        child: Row(
+  Widget _buildNavItem(IconData outlineIcon, IconData filledIcon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onTabTapped(index),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 50, height: 50,
-              decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(15)),
-              child: Icon(icon, color: iconColor),
+            Icon(
+              isSelected ? filledIcon : outlineIcon,
+              color: isSelected ? Colors.blueAccent[700] : Colors.grey[400],
             ),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  SizedBox(height: 4),
-                  Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
-                ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? Colors.blueAccent[700] : Colors.grey[500],
               ),
             )
           ],
         ),
       ),
-    );
-  }
-  Widget _buildNotificationIcon() {
-    return StreamBuilder<List<NotificationModel>>(
-      stream: SupabaseNotificationService().getNotificationStream(),
-      builder: (context, snapshot) {
-        final unreadCount = snapshot.data?.where((n) => !n.isRead).length ?? 0;
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            IconButton(
-              icon: Icon(Icons.notifications_none_rounded, color: Colors.white, size: 28),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationsScreen())),
-            ),
-            if (unreadCount > 0)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.indigo[900]!, width: 1.5),
-                  ),
-                  constraints: BoxConstraints(minWidth: 16, minHeight: 16),
-                  child: Text(
-                    unreadCount > 9 ? '9+' : '$unreadCount',
-                    style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
     );
   }
 }
@@ -463,19 +205,53 @@ class _BrowseTabState extends State<BrowseTab> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<AuthProvider>(context).user;
+    
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Premium Search & Filter Bar
+        // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.location_on, color: Colors.blueAccent[700], size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Location', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                      Text(user?.fullName ?? 'Campus Marketplace', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                ],
+              ),
+              _buildNotificationIconDark(),
+            ],
+          ),
+        ),
+
+        // Search Bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
             children: [
               Expanded(
                 child: Container(
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, 4))],
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(25),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -483,80 +259,65 @@ class _BrowseTabState extends State<BrowseTab> {
                       setState(() => _searchQuery = val);
                       _applyFilters();
                     },
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Search items...',
-                      prefixIcon: Icon(Icons.search, color: Colors.indigo),
+                      hintStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 12),
-              _buildNotificationIconDark(),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               GestureDetector(
                 onTap: () => _showFilterBottomSheet(),
                 child: Container(
-                  padding: EdgeInsets.all(12),
+                  height: 50,
+                  width: 50,
                   decoration: BoxDecoration(
-                    color: Colors.indigo,
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 8, offset: Offset(0, 4))],
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  child: Icon(Icons.tune, color: Colors.white, size: 24),
+                  child: const Icon(Icons.tune, color: Colors.white, size: 24),
                 ),
               ),
             ],
           ),
         ),
 
-        // Quick ItemType Chips
+        // Categories
         SizedBox(
-          height: 50,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            children: [
-              _buildQuickTypeChip('All Items', null),
-              _buildQuickTypeChip('Donations', 'donate'),
-              _buildQuickTypeChip('Auctions', 'auction'),
-              _buildQuickTypeChip('Selling', 'sale'),
-            ],
-          ),
-        ),
-        
-        // Category Chips
-        SizedBox(
-          height: 50,
+          height: 60,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             itemCount: _categories.length,
             itemBuilder: (ctx, i) {
               final cat = _categories[i];
               final isSelected = _selectedCategory == cat;
               return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: FilterChip(
-                  label: Text(cat),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedCategory = cat;
-                    });
+                padding: const EdgeInsets.only(right: 12.0),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedCategory = cat);
                     _applyFilters();
                   },
-                  selectedColor: Colors.indigo[100],
-                  checkmarkColor: Colors.indigo,
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.indigo[900] : Colors.grey[700],
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: isSelected ? Colors.indigo : Colors.grey.shade200),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.blueAccent[700] : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: isSelected ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] : null,
+                      border: isSelected ? null : Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.grey[700],
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -564,73 +325,38 @@ class _BrowseTabState extends State<BrowseTab> {
           ),
         ),
 
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text('Recommended For You', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ),
+
         Expanded(
           child: Consumer<ProductProvider>(
             builder: (context, productProvider, _) {
               if (productProvider.isLoading) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               final products = productProvider.products;
               
               if (products.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(24),
-                        decoration: BoxDecoration(color: Colors.indigo.withOpacity(0.05), shape: BoxShape.circle),
-                        child: Icon(Icons.search_off_rounded, size: 80, color: Colors.indigo[200]),
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        'No matches found',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo[900]),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'We couldn\'t find any items matching your current filters. Try adjusting them or clearing everything.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[600], height: 1.5),
-                      ),
-                      SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _searchQuery = '';
-                              _selectedCategory = 'All';
-                              _minPrice = null;
-                              _maxPrice = null;
-                              _condition = null;
-                              _itemType = null;
-                              _searchController.clear();
-                            });
-                            _applyFilters();
-                          },
-                          icon: Icon(Icons.refresh),
-                          label: Text('Clear All Filters'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.indigo,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                          ),
-                        ),
-                      ),
+                      Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
+                      const SizedBox(height: 16),
+                      Text('No items found', style: TextStyle(fontSize: 18, color: Colors.grey[500], fontWeight: FontWeight.w600)),
                     ],
                   ),
                 );
               }
 
               return GridView.builder(
-                padding: EdgeInsets.all(16),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.65,
+                  childAspectRatio: 0.68,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),

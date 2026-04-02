@@ -53,211 +53,246 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.product.title, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: Colors.black),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.share_outlined, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header Info (Above Image)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.product.title,
+                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black, height: 1.2),
+                        ),
+                      ),
+                      Container(
+                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                         decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(20)),
+                         child: Text(
+                           widget.product.condition ?? 'Used', 
+                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                         )
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.product.price > 0 ? '₹${widget.product.price.toStringAsFixed(0)}' : 'FREE',
+                    style: TextStyle(
+                      fontSize: 24, 
+                      fontWeight: FontWeight.w900, 
+                      color: widget.product.price > 0 ? Colors.blueAccent[700] : Colors.green[700],
+                      letterSpacing: -0.5
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             // Hero Image Section
-            Hero(
-              tag: 'product-${widget.product.id}',
-              child: Container(
-                height: 350,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: Offset(0, 5))
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-                  child: widget.product.imageUrl != null
-                      ? Image.network(
-                          widget.product.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (ctx, err, _) => Container(
-                            color: Colors.grey[100], 
-                            child: Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey))
-                          ),
-                        )
-                      : Container(
-                          color: Colors.grey[100],
-                          child: Center(child: Icon(Icons.image_not_supported, size: 60, color: Colors.grey)),
-                       ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Hero(
+                tag: 'product-${widget.product.id}',
+                child: Container(
+                  height: 320,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: widget.product.imageUrl != null
+                        ? Image.network(
+                            widget.product.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, _) => Center(child: Icon(Icons.image, size: 60, color: Colors.grey[300])),
+                          )
+                        : Center(child: Icon(Icons.image_not_supported, size: 60, color: Colors.grey[300])),
+                  ),
                 ),
               ),
             ),
 
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildBadge(),
-                      Text(
-                        'Category: ${widget.product.category}',
-                        style: TextStyle(color: Colors.indigo, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
+                  // Meta Info Row
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(
-                          widget.product.title,
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
-                        ),
+                       Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+                        child: Icon(Icons.category, color: Colors.blue[700], size: 20),
                       ),
-                      if (widget.product.price > 0 && !widget.product.isAuction)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '₹${widget.product.price.toStringAsFixed(0)}',
-                              style: AppTheme.priceStyle.copyWith(fontSize: 24),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Category', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                          Text(widget.product.category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        ],
+                      ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 24),
+                  
+                  const Text('Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                  const SizedBox(height: 12),
                   Text(
                     widget.product.description,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700], height: 1.5),
+                    style: TextStyle(fontSize: 15, color: Colors.grey[600], height: 1.5),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   
                   if (widget.product.isAuction)
                     _buildAuctionStream(context),
                   
-                  // Action Section
+                  // Status Checks
                   if (widget.product.status == 'pending_approval')
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[50], 
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.orange.withOpacity(0.3))
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.hourglass_empty, color: Colors.orange, size: 30),
-                          SizedBox(height: 8),
-                          Text('PENDING ADMIN APPROVAL', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ),
-                    ),
-                  // Chat Button (Always available to interact with donor)
-                  SizedBox(
-                    width: double.infinity,
-                    child: SecondaryButton(
-                        onPressed: () async {
-                          // Removed hard membership gating. Free users can now chat with limits.
-                          String? chatUserId = widget.product.donorId;
-                          String userName = 'Donor';
-
-                          // If donor is missing or null, route to Admin
-                          if (chatUserId == null || chatUserId.isEmpty) {
-                             final adminId = await SupabaseAuthService().getAdminId();
-                             if (adminId != null) {
-                               chatUserId = adminId;
-                               userName = 'Admin';
-                             } else {
-                               if (mounted) {
-                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Support is currently unavailable.')));
-                               }
-                               return;
-                             }
-                          }
-
-                          if (!mounted) return;
-                          
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => ChatDetailScreen(
-                              otherUserId: chatUserId!, 
-                              otherUserEmail: userName,
-                              donationId: widget.product.id,
-                              donationTitle: widget.product.title,
-                            )
-                          ));
-                        },
-                       icon: Icons.chat_bubble_outline,
-                       text: 'Chat with Donor',
-                    ),
-                  ),
-                  SizedBox(height: 12),
-
-                  if (widget.product.isAvailable)
-                  Column(
-                    children: [
-                        if (!widget.product.isAuction)
-                        SizedBox(
-                          width: double.infinity,
-                          child: PrimaryButton(
-                            onPressed: () {
-                              if (widget.product.price > 0) {
-                                _handleBuy(context);
-                              } else {
-                                _showClaimDialog(context);
-                              }
-                            },
-                            text: widget.product.price > 0 ? 'BUY NOW' : 'CLAIM ITEM',
-                          ),
-                        ),
-                    ],
-                  )
+                    _buildStatusBanner(Icons.hourglass_empty, Colors.orange, 'PENDING ADMIN APPROVAL')
                   else if (widget.product.status == 'sold')
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200], 
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.grey.withOpacity(0.3))
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.grey[700], size: 30),
-                          SizedBox(height: 8),
-                          Text('THIS ITEM HAS BEEN SOLD', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ),
-                    )
-                  else
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50], 
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.red.withOpacity(0.3))
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.lock_clock, color: Colors.red, size: 30),
-                          SizedBox(height: 8),
-                          Text('THIS ITEM HAS BEEN CLAIMED', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ),
-                    ),
+                    _buildStatusBanner(Icons.check_circle, Colors.grey[700]!, 'THIS ITEM HAS BEEN SOLD')
+                  else if (!widget.product.isAvailable)
+                    _buildStatusBanner(Icons.lock_clock, Colors.red, 'THIS ITEM HAS BEEN CLAIMED'),
                   
-                  SizedBox(height: 30),
+                  const SizedBox(height: 100), // Padding for bottom bar
                 ],
               ),
             ),
           ],
         ),
+      ),
+      // Fixed Bottom Action Bar
+      bottomNavigationBar: Container(
+         padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+         decoration: BoxDecoration(
+           color: Colors.white,
+           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+         ),
+         child: Row(
+           children: [
+             // Chat Button
+             Expanded(
+               flex: 1,
+               child: InkWell(
+                 onTap: () async {
+                    String? chatUserId = widget.product.donorId;
+                    String userName = 'Donor';
+
+                    if (chatUserId == null || chatUserId.isEmpty) {
+                       final adminId = await SupabaseAuthService().getAdminId();
+                       if (adminId != null) {
+                         chatUserId = adminId;
+                         userName = 'Admin';
+                       } else {
+                         if (mounted) {
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Support is currently unavailable.')));
+                         }
+                         return;
+                       }
+                    }
+
+                    if (!mounted) return;
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ChatDetailScreen(
+                        otherUserId: chatUserId!, 
+                        otherUserEmail: userName,
+                        donationId: widget.product.id,
+                        donationTitle: widget.product.title,
+                      )
+                    ));
+                 },
+                 child: Container(
+                   height: 56,
+                   decoration: BoxDecoration(
+                     border: Border.all(color: Colors.grey[300]!),
+                     borderRadius: BorderRadius.circular(16),
+                   ),
+                   child: const Center(child: Icon(Icons.chat_bubble_outline, color: Colors.black87)),
+                 ),
+               ),
+             ),
+             const SizedBox(width: 16),
+             // Main Action Button
+             Expanded(
+               flex: 2,
+               child: InkWell(
+                 onTap: () {
+                    if (widget.product.isAvailable) {
+                        if (widget.product.price > 0 && !widget.product.isAuction) {
+                          _handleBuy(context);
+                        } else if (widget.product.price == 0 && !widget.product.isAuction) {
+                          _showClaimDialog(context);
+                        }
+                    }
+                 },
+                 child: Container(
+                   height: 56,
+                   decoration: BoxDecoration(
+                     color: widget.product.isAvailable ? Colors.blueAccent[700] : Colors.grey[400],
+                     borderRadius: BorderRadius.circular(16),
+                     boxShadow: widget.product.isAvailable ? [BoxShadow(color: Colors.blueAccent.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+                   ),
+                   child: Center(
+                     child: Text(
+                        widget.product.isAvailable 
+                           ? (widget.product.price > 0 && !widget.product.isAuction ? 'Buy Now' : (widget.product.isAuction ? 'Join Auction' : 'Claim Item'))
+                           : 'Unavailable',
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                     ),
+                   ),
+                 ),
+               ),
+             ),
+           ],
+         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBanner(IconData icon, Color color, String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: color.withOpacity(0.3))
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 30),
+          const SizedBox(height: 8),
+          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
+        ],
       ),
     );
   }
