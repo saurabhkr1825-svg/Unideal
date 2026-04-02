@@ -11,6 +11,7 @@ class ChatRoom {
   final DateTime? lastMessageAt;
   final String otherUserStatus;
   final DateTime? otherUserLastSeen;
+  int unreadCount;
 
   ChatRoom({
     required this.id,
@@ -23,6 +24,7 @@ class ChatRoom {
     this.lastMessageAt,
     this.otherUserStatus = 'offline',
     this.otherUserLastSeen,
+    this.unreadCount = 0,
   });
 
   factory ChatRoom.fromMap(Map<String, dynamic> map, String currentUserId) {

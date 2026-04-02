@@ -200,6 +200,20 @@ class SupabaseChatService {
         .or('sender_id.eq.${user.id},receiver_id.eq.${user.id}')
         .order('created_at', ascending: false);
 
-    return (response as List).map((map) => ChatRoom.fromMap(map, user.id)).toList();
+    final rooms = (response as List).map((map) => ChatRoom.fromMap(map, user.id)).toList();
+    for (var room in rooms) {
+      try {
+        final unreadRes = await _client.from('messages')
+            .select('id')
+            .eq('chat_id', room.id)
+            .neq('sender_id', user.id)
+            .neq('status', 'read');
+        room.unreadCount = unreadRes.length;
+      } catch (e) {
+        print('Error getting unread count: $e');
+        room.unreadCount = 0;
+      }
+    }
+    return rooms;
   }
 }

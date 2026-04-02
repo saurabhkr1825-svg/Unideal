@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/supabase_chat_service.dart';
 import '../models/chat_model.dart';
 import 'chat_detail_screen.dart';
@@ -234,16 +235,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text('12:00 PM', style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: const BoxDecoration(
-              color: Color(0xFF4F85F6),
-              shape: BoxShape.circle,
-            ),
-            child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(
+            room.lastMessageAt != null ? DateFormat('h:mm a').format(room.lastMessageAt!) : '',
+            style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w600)
           ),
+          if (room.unreadCount > 0) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: const BoxDecoration(
+                color: Color(0xFF4F85F6),
+                shape: BoxShape.circle,
+              ),
+              child: Text('${room.unreadCount}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+          ]
         ],
       ),
       onTap: () async {
