@@ -254,14 +254,40 @@ function App() {
       {/* Footer */}
       <footer className="footer">
         <div className="container">
-          <div className="footer-content">
-            <div className="logo text-gradient" style={{ fontSize: '1.25rem' }}>Unideal</div>
-            <div className="nav-links">
-              <a href="mailto:contact@unideal.app">Contact Us</a>
-              <a href="https://github.com/Saurabhkr1825/Unideal" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <div className="footer-grid">
+            <div className="footer-column">
+              <h3 className="logo text-gradient" style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Unideal</h3>
+              <p>Buy & Sell Smartly</p>
+            </div>
+            
+            <div className="footer-column">
+              <h4>Quick Links</h4>
+              <a href="https://unideal-app.vercel.app/">Home</a>
+              <a href="https://unideal-app.vercel.app/">Browse Products</a>
+              <a href="https://unideal-app.vercel.app/">Sell Item</a>
+              <a href="https://unideal-app.vercel.app/">My Orders</a>
+            </div>
+            
+            <div className="footer-column">
+              <h4>Support</h4>
+              <a href="mailto:unideal9@gmail.com">Help Center</a>
+              <a href="mailto:unideal9@gmail.com">Report Issue</a>
+              <a href="#">Terms & Conditions</a>
+              <a href="#">Privacy Policy</a>
+            </div>
+            
+            <div className="footer-column">
+              <h4>Contact</h4>
+              <p>Email: <a href="mailto:unideal9@gmail.com" style={{ display: 'inline', color: '#00bfff' }}>unideal9@gmail.com</a></p>
+              <a href="https://github.com/saurabhkr1825-svg/" target="_blank" rel="noopener noreferrer">GitHub Profile</a>
             </div>
           </div>
-          <p className="footer-text">© {new Date().getFullYear()} Unideal. Crafted by students for a smarter future.</p>
+          
+          <hr />
+          
+          <div className="footer-bottom">
+            <p>© 2026 Unideal | Developed by Saurabh (IIT Patna)</p>
+          </div>
         </div>
       </footer>
     </div>

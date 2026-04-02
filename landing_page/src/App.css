@@ -13,6 +13,14 @@ body {
   line-height: 1.6;
 }
 
+.text-gradient {
+  background: linear-gradient(90deg, #7c6cff, #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  font-weight: bold;
+}
+
 header {
   display: flex;
   justify-content: space-between;
@@ -92,8 +100,56 @@ ul li {
   color: #ddd;
 }
 
-footer {
-  padding: 40px;
+.footer {
+  background: #0a0a0f;
+  color: #fff;
+  padding: 80px 10% 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-grid {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.footer-column {
+  flex: 1;
+  min-width: 200px;
+}
+
+.footer-column h3, 
+.footer-column h4 {
+  color: #fff;
+  margin-bottom: 1.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.footer-column p, 
+.footer-column a {
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 0.75rem;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.footer-column a:hover {
+  color: var(--primary-color, #7c6cff);
+  transform: translateX(5px);
+}
+
+.footer hr {
+  margin: 40px 0 30px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-bottom {
   text-align: center;
-  color: #aaa;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
