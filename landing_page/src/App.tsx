@@ -61,7 +61,7 @@ function App() {
             <a href="#preview">Preview</a>
             <a href="#about">About</a>
           </nav>
-          <a href="#download" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>Use Web App</a>
+          <a href="https://unideal-app.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>Use Web App</a>
         </div>
       </header>
 
@@ -82,7 +82,7 @@ function App() {
               </svg>
               Download APK
             </a>
-            <a href="#" className="btn btn-outline fade-up stagger-2" ref={setRef}>
+            <a href="https://unideal-app.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-outline fade-up stagger-2" ref={setRef}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -165,7 +165,7 @@ function App() {
           </p>
           <div className="hero-buttons">
             <a href="#" className="btn btn-primary">Download APK</a>
-            <a href="#" className="btn btn-outline">Start Web App</a>
+            <a href="https://unideal-app.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-outline">Start Web App</a>
           </div>
         </div>
       </section>
