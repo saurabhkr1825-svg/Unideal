@@ -1031,9 +1031,7 @@ class ProfileTab extends StatelessWidget {
                    // Navigate to Messages tab (Index 2 in the bottom nav bar is MessagesTab)
                    final rootHomeScreenState = context.findAncestorStateOfType<_HomeScreenState>();
                    if (rootHomeScreenState != null) {
-                       rootHomeScreenState.setState(() {
-                         rootHomeScreenState._selectedIndex = 2;
-                       });
+                       rootHomeScreenState._onTabTapped(2);
                    }
                 }),
                 
