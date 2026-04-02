@@ -74,7 +74,7 @@ function App() {
             Smart solutions for everyday problems. Experience the next generation of fast, seamless, and secure peer-to-peer commerce.
           </p>
           <div className="hero-buttons">
-            <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/tag/v1.0" target="_blank" rel="noopener noreferrer" className="btn btn-primary fade-up stagger-1" ref={setRef}>
+            <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/download/v1.0/unideal.apk" target="_blank" rel="noopener noreferrer" className="btn btn-primary fade-up stagger-1" ref={setRef}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -164,7 +164,7 @@ function App() {
             Download the app today or launch the web version instantly.
           </p>
           <div className="hero-buttons">
-            <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/tag/v1.0" target="_blank" rel="noopener noreferrer" className="btn btn-primary">Download APK</a>
+            <a href="https://github.com/saurabhkr1825-svg/Unideal/releases/download/v1.0/unideal.apk" target="_blank" rel="noopener noreferrer" className="btn btn-primary">Download APK</a>
             <a href="https://unideal-app.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-outline">Start Web App</a>
           </div>
         </div>
