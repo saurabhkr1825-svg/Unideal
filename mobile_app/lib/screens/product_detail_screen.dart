@@ -12,6 +12,7 @@ import '../widgets/custom_buttons.dart';
 import '../widgets/item_badge.dart';
 import '../services/supabase_claim_service.dart';
 import '../services/supabase_purchase_service.dart';
+import 'payment_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -30,7 +31,106 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
 
-    _showPurchaseRequestDialog(context);
+    _showBuyOptionsSelection(context, overridePrice: overridePrice);
+  }
+
+  void _showBuyOptionsSelection(BuildContext context, {double? overridePrice}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Flexible Buying Options', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Choose how you want to buy this item', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 24),
+            
+            // Option 1: Hand-to-Hand
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                _showPurchaseRequestDialog(context);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.indigo.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.indigo.withOpacity(0.02),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.handshake_outlined, color: Colors.indigo, size: 30),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Meet & Pay Offline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('Direct student-to-student deal (Face-to-Face)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Option 2: Online Payment
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentScreen(
+                      product: widget.product,
+                      type: 'product',
+                      finalPriceOverride: overridePrice,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.green.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.green.withOpacity(0.02),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.account_balance_wallet_outlined, color: Colors.green, size: 30),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Pay Online (Secure)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+                          Text('Convenient for busy students. Funds held in escrow.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showPurchaseRequestDialog(BuildContext context) {
