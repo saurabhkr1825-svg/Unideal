@@ -168,6 +168,41 @@ function App() {
         </div>
       </section>
 
+      {/* How Buying Works Section */}
+      <section id="how-buying-works" className="app-preview container fade-up" ref={setRef} style={{ paddingBottom: '4rem' }}>
+        <div className="section-header">
+          <h2>How Buying Works</h2>
+          <p>Unideal enables simple, safe, and direct student-to-student transactions.</p>
+        </div>
+        <div className="features-grid">
+          <div className="feature-card glass-panel fade-up stagger-1" ref={setRef}>
+            <div className="feature-icon">🛒</div>
+            <h3>Send Request</h3>
+            <p>Buyer sends a request for an item with pickup details.</p>
+          </div>
+          <div className="feature-card glass-panel fade-up stagger-2" ref={setRef}>
+            <div className="feature-icon">📍</div>
+            <h3>Share Location</h3>
+            <p>Share your Hostel name, Room no, and meeting point.</p>
+          </div>
+          <div className="feature-card glass-panel fade-up stagger-3" ref={setRef}>
+            <div className="feature-icon">📩</div>
+            <h3>Seller Decision</h3>
+            <p>Seller reviews the request and accepts or rejects it.</p>
+          </div>
+          <div className="feature-card glass-panel fade-up stagger-4" ref={setRef}>
+            <div className="feature-icon">🤝</div>
+            <h3>Hand-to-Hand</h3>
+            <p>Meet up on campus and exchange the item directly.</p>
+          </div>
+        </div>
+        <div className="fade-up" ref={setRef} style={{ textAlign: 'center', marginTop: '2rem', padding: '1.5rem', background: 'rgba(74, 222, 128, 0.05)', borderRadius: '16px', border: '1px solid rgba(74, 222, 128, 0.1)' }}>
+          <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, color: '#4ade80' }}>
+            No online payment. No risk. Just simple deals.
+          </p>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="features container">
         <div className="section-header fade-up" ref={setRef}>
