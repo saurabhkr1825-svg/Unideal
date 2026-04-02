@@ -49,10 +49,10 @@ class _ClaimManagementScreenState extends State<ClaimManagementScreen> {
     try {
        if (isApprove) {
          await _claimService.approveClaim(claim.id, claim.itemId);
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Claim request approved.'), backgroundColor: Colors.green));
+         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Claim request approved.'), backgroundColor: Colors.green));
        } else {
          await _claimService.rejectClaim(claim.id);
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Claim request rejected.'), backgroundColor: Colors.orange));
+         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Claim request rejected.'), backgroundColor: Colors.orange));
        }
        _fetchClaims(); // Refresh list
     } catch (e) {
@@ -78,25 +78,25 @@ class _ClaimManagementScreenState extends State<ClaimManagementScreen> {
         title: Text(widget.isAdminView ? 'All Pending Claims' : 'My Item Claims'),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh),
             onPressed: _fetchClaims,
           )
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _claims.isEmpty
-              ? Center(child: Text('No pending claim requests found.', style: TextStyle(fontSize: 16, color: Colors.grey)))
+              ? const Center(child: Text('No pending claim requests found.', style: TextStyle(fontSize: 16, color: Colors.grey)))
               : ListView.builder(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   itemCount: _claims.length,
                   itemBuilder: (context, index) {
                     final claim = _claims[index];
                     return Card(
-                      margin: EdgeInsets.only(bottom: 16),
+                      margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       child: Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -107,37 +107,37 @@ class _ClaimManagementScreenState extends State<ClaimManagementScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.network(claim.itemImage!, width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width: 50, height: 50, color: Colors.grey[200])),
                                   ),
-                                SizedBox(width: 12),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     claim.itemTitle ?? 'Unknown Item',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                                   ),
                                 ),
                               ],
                             ),
-                            Divider(height: 30),
-                            Text('Requester: ${claim.name}', style: TextStyle(fontWeight: FontWeight.w600)),
-                            SizedBox(height: 4),
+                            const Divider(height: 30),
+                            Text('Requester: ${claim.name}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
                             Text('Phone: ${claim.phone}', style: TextStyle(color: Colors.grey[700])),
-                             SizedBox(height: 4),
+                             const SizedBox(height: 4),
                             Text('Time Pref: ${claim.pickupTimePreference}', style: TextStyle(color: Colors.indigo[700], fontWeight: FontWeight.w500)),
                             if (claim.pickupReason != null && claim.pickupReason!.isNotEmpty) ...[
-                               SizedBox(height: 8),
+                               const SizedBox(height: 8),
                                Container(
-                                 padding: EdgeInsets.all(8),
+                                 padding: const EdgeInsets.all(8),
                                  width: double.infinity,
                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
-                                 child: Text('Reason: ${claim.pickupReason}', style: TextStyle(fontStyle: FontStyle.italic)),
+                                 child: Text('Reason: ${claim.pickupReason}', style: const TextStyle(fontStyle: FontStyle.italic)),
                                )
                             ],
-                            SizedBox(height: 16),
+                            const SizedBox(height: 16),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 IconButton(
                                   onPressed: () => _openChat(claim),
-                                  icon: Icon(Icons.chat_bubble_outline),
+                                  icon: const Icon(Icons.chat_bubble_outline),
                                   color: Colors.blue,
                                   tooltip: 'Chat with Requester',
                                 ),
@@ -146,13 +146,13 @@ class _ClaimManagementScreenState extends State<ClaimManagementScreen> {
                                     OutlinedButton(
                                       onPressed: () => _handleAction(claim, false),
                                       style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                                      child: Text('Reject'),
+                                      child: const Text('Reject'),
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     ElevatedButton(
                                       onPressed: () => _handleAction(claim, true),
                                       style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                                      child: Text('Approve'),
+                                      child: const Text('Approve'),
                                     ),
                                   ],
                                 )

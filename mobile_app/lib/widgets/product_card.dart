@@ -73,7 +73,7 @@ class ProductCard extends StatelessWidget {
                         color: product.price > 0 ? AppTheme.textPrimaryColor : AppTheme.primaryColor,
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textSecondaryColor),
+                    const Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textSecondaryColor),
                   ],
                 ),
               ],

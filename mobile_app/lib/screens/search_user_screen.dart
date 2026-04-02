@@ -3,6 +3,8 @@ import '../services/supabase_chat_service.dart';
 import 'chat_detail_screen.dart';
 
 class SearchUserScreen extends StatefulWidget {
+  const SearchUserScreen({super.key});
+
   @override
   _SearchUserScreenState createState() => _SearchUserScreenState();
 }
@@ -43,12 +45,12 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         title: TextField(
           controller: _searchController,
           autofocus: true,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Search users...',
             border: InputBorder.none,
             hintStyle: TextStyle(color: Colors.white70),
           ),
-          style: TextStyle(color: Colors.white, fontSize: 18),
+          style: const TextStyle(color: Colors.white, fontSize: 18),
           textInputAction: TextInputAction.search,
           onSubmitted: _searchUsers,
           onChanged: (val) {
@@ -58,13 +60,13 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () => _searchUsers(_searchController.text),
           ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _searchResults.isEmpty
               ? Center(
                   child: Text(
@@ -85,7 +87,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                           (user['full_name'] != null && user['full_name'].toString().isNotEmpty)
                               ? user['full_name'].toString()[0].toUpperCase()
                               : 'U',
-                          style: TextStyle(color: Colors.indigo),
+                          style: const TextStyle(color: Colors.indigo),
                         ),
                       ),
                       title: Text(user['full_name'] ?? 'Unknown User'),

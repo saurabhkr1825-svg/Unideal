@@ -5,6 +5,8 @@ import '../models/membership_request_model.dart';
 import '../providers/auth_provider.dart';
 
 class AdminMembershipPanel extends StatefulWidget {
+  const AdminMembershipPanel({super.key});
+
   @override
   _AdminMembershipPanelState createState() => _AdminMembershipPanelState();
 }
@@ -32,31 +34,31 @@ class _AdminMembershipPanelState extends State<AdminMembershipPanel> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Admin: Membership Requests')),
+      appBar: AppBar(title: const Text('Admin: Membership Requests')),
       body: FutureBuilder<List<MembershipRequest>>(
         future: _membershipService.getAllPendingRequests(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Error loading requests:\n${snapshot.error}', textAlign: TextAlign.center, style: TextStyle(color: Colors.red)),
+              child: Text('Error loading requests:\n${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
             ));
           }
           final requests = snapshot.data ?? [];
           if (requests.isEmpty) {
-            return Center(child: Text('No pending membership requests.'));
+            return const Center(child: Text('No pending membership requests.'));
           }
 
           return ListView.builder(
             itemCount: requests.length,
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             itemBuilder: (ctx, i) {
               final req = requests[i];
               return Card(
-                margin: EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -66,17 +68,17 @@ class _AdminMembershipPanelState extends State<AdminMembershipPanel> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(req.planName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo)),
-                          Text(req.formattedDate, style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(req.planName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                          Text(req.formattedDate, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                         ],
                       ),
-                      SizedBox(height: 8),
-                      Text('User ID: ${req.userId}', style: TextStyle(fontSize: 12)),
-                      Text('Amount: ₹${req.amount.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Txn ID: ${req.transactionId ?? "N/A"}', style: TextStyle(fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
+                      Text('User ID: ${req.userId}', style: const TextStyle(fontSize: 12)),
+                      Text('Amount: ₹${req.amount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Txn ID: ${req.transactionId ?? "N/A"}', style: const TextStyle(fontWeight: FontWeight.w500)),
                       if (req.utrNumber != null && req.utrNumber != req.transactionId)
-                        Text('UTR: ${req.utrNumber}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
-                      SizedBox(height: 16),
+                        Text('UTR: ${req.utrNumber}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
+                      const SizedBox(height: 16),
                       
                       // Screenshot Preview
                       if (req.screenshotUrl != null)
@@ -96,32 +98,32 @@ class _AdminMembershipPanelState extends State<AdminMembershipPanel> {
                           ),
                         ),
                       
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
                               onPressed: () => _updateStatus(req.id, 'rejected', req.userId),
-                              child: Text('Reject'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.red,
-                                side: BorderSide(color: Colors.red),
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
+                              child: const Text('Reject'),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () => _updateStatus(req.id, 'approved', req.userId),
-                              child: Text('Approve'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
+                              child: const Text('Approve'),
                             ),
                           ),
                         ],
@@ -145,7 +147,7 @@ class _AdminMembershipPanelState extends State<AdminMembershipPanel> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.network(url),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Close')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
           ],
         ),
       ),

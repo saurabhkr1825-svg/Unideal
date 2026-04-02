@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'membership_screen.dart';
-import '../widgets/custom_card.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String otherUserId;
@@ -119,7 +118,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     try {
       // Show loading
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Uploading image...')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading image...')));
       
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final path = 'chat_images/$_chatId/$fileName';
@@ -158,7 +157,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent + 100,
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     }
@@ -247,7 +246,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           _buildProductContext(),
           Expanded(
             child: _chatId == null 
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : StreamBuilder<List<ChatMessage>>(
                   stream: _chatService.getMessagesStream(_chatId!),
                   builder: (context, snapshot) {
@@ -255,7 +254,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     }
                     if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     }
 
                     final messages = snapshot.data!;
@@ -270,10 +269,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       children: [
                         Expanded(
                           child: messages.isEmpty
-                            ? Center(child: Text('No messages yet. Say Hi!'))
+                            ? const Center(child: Text('No messages yet. Say Hi!'))
                             : ListView.builder(
                                 controller: _scrollController,
-                                padding: EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(16),
                                 itemCount: messages.length,
                                 itemBuilder: (ctx, i) {
                                   final msg = messages[i];
@@ -282,8 +281,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                               ),
                         ),
                         if (_isOtherTyping)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -352,19 +351,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Widget _buildQuickReplies(int sentCount, bool isMember) {
-    if (!isMember && sentCount >= _messageLimit) return SizedBox.shrink();
+    if (!isMember && sentCount >= _messageLimit) return const SizedBox.shrink();
     final replies = ['Is this available?', 'Final price?', 'Where can we meet?'];
-    return Container(
+    return SizedBox(
       height: 40,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: replies.length,
         itemBuilder: (context, i) {
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ActionChip(
-              label: Text(replies[i], style: TextStyle(fontSize: 12)),
+              label: Text(replies[i], style: const TextStyle(fontSize: 12)),
               onPressed: () {
                 _messageController.text = replies[i];
                 _sendMessage(sentCount, isMember);
@@ -381,7 +380,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final isLocked = remaining <= 0;
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
       color: isLocked ? Colors.red[50] : Colors.amber[50],
       width: double.infinity,
       child: Text(
@@ -493,7 +492,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => MembershipScreen()));
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()));
                 },
                 icon: const Icon(Icons.star, size: 18),
                 label: const Text('Unlock Unlimited Chats (₹99/mo)'),
@@ -580,16 +579,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Limit Reached'),
-        content: Text('You have reached the free message limit for this chat. Upgrade to Premium for unlimited communication!'),
+        title: const Text('Limit Reached'),
+        content: const Text('You have reached the free message limit for this chat. Upgrade to Premium for unlimited communication!'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Maybe Later')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Maybe Later')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => MembershipScreen()));
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()));
             }, 
-            child: Text('Upgrade Now')
+            child: const Text('Upgrade Now')
           ),
         ],
       ),
@@ -601,14 +600,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Report User'),
+        title: const Text('Report User'),
         content: TextField(
           controller: controller,
-          decoration: InputDecoration(hintText: 'Reason for reporting...'),
+          decoration: const InputDecoration(hintText: 'Reason for reporting...'),
           maxLines: 3,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final user = Supabase.instance.client.auth.currentUser;
@@ -619,10 +618,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   'reason': controller.text,
                 });
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Report submitted.')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report submitted.')));
               }
             },
-            child: Text('Submit'),
+            child: const Text('Submit'),
           ),
         ],
       ),
@@ -633,10 +632,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Block User?'),
-        content: Text('You will no longer receive messages from this user.'),
+        title: const Text('Block User?'),
+        content: const Text('You will no longer receive messages from this user.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
@@ -648,10 +647,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 });
                 Navigator.pop(context);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User blocked.')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User blocked.')));
               }
             },
-            child: Text('Block', style: TextStyle(color: Colors.white)),
+            child: const Text('Block', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

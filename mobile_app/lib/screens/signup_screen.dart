@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import 'home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
   @override
   _SignupScreenState createState() => _SignupScreenState();
 }
@@ -26,7 +28,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _role,
       );
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     } catch (e) {
@@ -42,7 +44,7 @@ class _SignupScreenState extends State<SignupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       extendBodyBehindAppBar: true,
       body: Container(
@@ -55,13 +57,13 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Text(
+                   const Text(
                     'Create Account',
                     style: TextStyle(
                       fontSize: 32,
@@ -69,43 +71,43 @@ class _SignupScreenState extends State<SignupScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   _buildTextField(
                     controller: _fullNameController,
                     label: 'Full Name',
                     icon: Icons.person,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildTextField(
                     controller: _emailController,
                     label: 'Email',
                     icon: Icons.email,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildTextField(
                     controller: _passwordController,
                     label: 'Password',
                     icon: Icons.lock,
                     obscureText: true,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildDropdown(),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) => auth.isLoading
-                        ? CircularProgressIndicator(color: Colors.purpleAccent)
+                        ? const CircularProgressIndicator(color: Colors.purpleAccent)
                         : ElevatedButton(
                             onPressed: _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.purpleAccent,
                               foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                               elevation: 5,
                             ),
-                            child: Text('SIGN UP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            child: const Text('SIGN UP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           ),
                   ),
                 ],
@@ -131,13 +133,13 @@ class _SignupScreenState extends State<SignupScreen> {
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
-        style: TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white70),
+          labelStyle: const TextStyle(color: Colors.white70),
           prefixIcon: Icon(icon, color: Colors.purpleAccent),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) return 'Please enter $label';
@@ -149,7 +151,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
    Widget _buildDropdown() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(15),
@@ -159,12 +161,12 @@ class _SignupScreenState extends State<SignupScreen> {
           value: _role,
           dropdownColor: Colors.grey[900],
           isExpanded: true,
-          icon: Icon(Icons.arrow_drop_down, color: Colors.purpleAccent),
-          style: TextStyle(color: Colors.white),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.purpleAccent),
+          style: const TextStyle(color: Colors.white),
           items: ['user', 'admin'].map((String value) {
             return DropdownMenuItem<String>(
               value: value,
-              child: Text(value.toUpperCase(), style: TextStyle(color: Colors.white)),
+              child: Text(value.toUpperCase(), style: const TextStyle(color: Colors.white)),
             );
           }).toList(),
           onChanged: (newValue) {

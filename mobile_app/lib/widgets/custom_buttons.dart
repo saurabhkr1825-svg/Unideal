@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/app_theme.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -19,12 +18,12 @@ class PrimaryButton extends StatelessWidget {
       return ElevatedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon),
-        label: Text(text, style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+        label: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
       );
     }
     return ElevatedButton(
       onPressed: onPressed,
-      child: Text(text, style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
     );
   }
 }
@@ -47,12 +46,12 @@ class SecondaryButton extends StatelessWidget {
       return OutlinedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon),
-        label: Text(text, style: TextStyle(fontWeight: FontWeight.bold)),
+        label: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
       );
     }
     return OutlinedButton(
       onPressed: onPressed,
-      child: Text(text, style: TextStyle(fontWeight: FontWeight.bold)),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 }

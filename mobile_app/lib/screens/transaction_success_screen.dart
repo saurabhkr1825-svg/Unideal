@@ -31,7 +31,7 @@ class TransactionSuccessScreen extends StatelessWidget {
                   color: Colors.green[50],
                   shape: BoxShape.circle,
                 ),
-                child: Center(
+                child: const Center(
                   child: Icon(
                     Icons.check_circle,
                     color: Colors.green,
@@ -119,7 +119,7 @@ class TransactionSuccessScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => OrdersScreen()),
+                      MaterialPageRoute(builder: (context) => const OrdersScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

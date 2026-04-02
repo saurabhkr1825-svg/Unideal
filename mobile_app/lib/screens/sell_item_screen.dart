@@ -8,6 +8,8 @@ import '../providers/auction_provider.dart';
 import '../widgets/custom_buttons.dart';
 
 class SellItemScreen extends StatefulWidget {
+  const SellItemScreen({super.key});
+
   @override
   _SellItemScreenState createState() => _SellItemScreenState();
 }
@@ -37,7 +39,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please upload a product photo'), backgroundColor: Colors.orange));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a product photo'), backgroundColor: Colors.orange));
       return;
     }
 
@@ -73,8 +75,8 @@ class _SellItemScreenState extends State<SellItemScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Icon(Icons.check_circle, color: Colors.green, size: 60),
-          content: Column(
+          title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+          content: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Success!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
@@ -88,7 +90,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
                 Navigator.of(ctx).pop();
                 Navigator.of(context).pop();
               },
-              child: Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
             )
           ],
         ),
@@ -103,21 +105,21 @@ class _SellItemScreenState extends State<SellItemScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('List an Item', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('List an Item', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Photo Upload Section
-              Text('Product Photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 12),
+              const Text('Product Photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
@@ -133,14 +135,14 @@ class _SellItemScreenState extends State<SellItemScreen> {
                       : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_photo_alternate_outlined, color: Colors.indigo, size: 50),
-                            SizedBox(height: 8),
+                            const Icon(Icons.add_photo_alternate_outlined, color: Colors.indigo, size: 50),
+                            const SizedBox(height: 8),
                             Text('Tap to select photo', style: TextStyle(color: Colors.indigo[300])),
                           ],
                         ),
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
 
               // Form Fields
               _buildSectionTitle('Basic Information'),
@@ -149,14 +151,14 @@ class _SellItemScreenState extends State<SellItemScreen> {
                 label: 'Item Title',
                 hint: 'e.g. Scientific Calculator, Engineering Books',
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(
                 controller: _descController,
                 label: 'Description',
                 hint: 'Tell us more about the item...',
                 maxLines: 4,
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               _buildSectionTitle('Details'),
               Row(
@@ -169,7 +171,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
                       onChanged: (v) => setState(() => _category = v!),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildDropdown(
                       label: 'Condition',
@@ -180,7 +182,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               _buildSectionTitle('Listing Type'),
               Row(
@@ -208,7 +210,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
                   ),
                 ),
               if (_listingType == 'Auction') ...[
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildDropdown(
                   label: 'Auction Duration',
                   value: '$_auctionDurationHours Hours',
@@ -219,25 +221,25 @@ class _SellItemScreenState extends State<SellItemScreen> {
                     });
                   },
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: Colors.purple.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
-                      Icon(Icons.gavel_outlined, color: Colors.purple, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.gavel_outlined, color: Colors.purple, size: 20),
+                      const SizedBox(width: 8),
                       Text('Highest bidder will receive the item', style: TextStyle(color: Colors.purple[700], fontSize: 13, fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ),
               ],
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
 
               // Submit Button
               Consumer<ProductProvider>(
                 builder: (context, product, _) => product.isLoading
-                    ? Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator())
                     : SizedBox(
                         width: double.infinity,
                         child: PrimaryButton(
@@ -246,7 +248,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
                         ),
                       ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -257,7 +259,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
-      child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
     );
   }
 
@@ -278,7 +280,7 @@ class _SellItemScreenState extends State<SellItemScreen> {
         filled: true,
         fillColor: Colors.grey[50],
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
       validator: (v) => v!.isEmpty ? '$label is required' : null,
     );
@@ -289,9 +291,9 @@ class _SellItemScreenState extends State<SellItemScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.bold)),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: Colors.grey[50],
             borderRadius: BorderRadius.circular(15),

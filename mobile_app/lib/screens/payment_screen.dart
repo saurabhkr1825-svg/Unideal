@@ -10,7 +10,6 @@ import '../providers/product_provider.dart';
 import '../models/product_model.dart';
 import '../utils/constants.dart';
 import 'package:flutter/services.dart';
-import 'home_screen.dart';
 import 'transaction_success_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -68,11 +67,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _confirmPayment() async {
     if (_proofImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please upload a screenshot of your payment')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a screenshot of your payment')));
       return;
     }
     if (_utrController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter your Transaction ID / UTR number')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your Transaction ID / UTR number')));
       return;
     }
 
@@ -136,22 +135,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Confirm Transaction', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('Confirm Transaction', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildProgressIndicator(),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             
             // QR Section
             Container(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.indigo[900]!, Colors.indigo[600]!],
@@ -160,26 +159,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
-                  BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 20, offset: Offset(0, 10))
+                  BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))
                 ],
               ),
               child: Column(
                 children: [
                   Text(
                     widget.type == 'membership' ? 'Donate ₹99 to Become Premium' : 'Pay to Secure Item',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   if (widget.type != 'membership')
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8.0),
                       child: Text(
                         'Funds will be held in Escrow for your safety.',
                         style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                     child: QrImageView(
                       data: 'upi://pay?pa=${AppConstants.upiId}&pn=Unideal&am=${widget.type == 'membership' ? 99 : 0}&tn=${widget.product.title}',
@@ -187,10 +186,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       size: 160.0,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   _buildUpiCopySection(),
-                  SizedBox(height: 12),
-                  Row(
+                  const SizedBox(height: 12),
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.security, color: Colors.white70, size: 14),
@@ -240,14 +239,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
             
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             _buildSectionTitle('Transaction Details'),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextField(
               controller: _utrController,
               decoration: InputDecoration(
                 hintText: 'Enter 12-digit UTR or Transaction ID',
-                prefixIcon: Icon(Icons.numbers, color: Colors.indigo),
+                prefixIcon: const Icon(Icons.numbers, color: Colors.indigo),
                 filled: true,
                 fillColor: Colors.grey[50],
                 border: OutlineInputBorder(
@@ -260,16 +259,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             _buildSectionTitle('Upload Payment Screenshot'),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildUploadArea(),
             
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             _buildSubmitButton(),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildTrustFooter(),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -296,10 +295,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
           radius: 14,
           backgroundColor: isDone ? Colors.green : (isActive ? Colors.indigo : Colors.grey[300]),
           child: isDone 
-            ? Icon(Icons.check, size: 16, color: Colors.white) 
+            ? const Icon(Icons.check, size: 16, color: Colors.white) 
             : Text(number.toString(), style: TextStyle(fontSize: 12, color: isActive ? Colors.white : Colors.grey[600], fontWeight: FontWeight.bold)),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(label, style: TextStyle(fontSize: 11, color: isDone || isActive ? Colors.black87 : Colors.grey[500], fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
       ],
     );
@@ -309,7 +308,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Expanded(
       child: Container(
         height: 2,
-        margin: EdgeInsets.only(bottom: 20),
+        margin: const EdgeInsets.only(bottom: 20),
         color: isActive ? Colors.green : Colors.grey[200],
       ),
     );
@@ -318,13 +317,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildUpiCopySection() {
     return GestureDetector(
       onTap: () {
-        Clipboard.setData(ClipboardData(text: AppConstants.upiId));
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('UPI ID Copied!'), duration: Duration(seconds: 1)));
+        Clipboard.setData(const ClipboardData(text: AppConstants.upiId));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UPI ID Copied!'), duration: Duration(seconds: 1)));
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(AppConstants.upiId, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -337,7 +336,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87));
+    return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87));
   }
 
   Widget _buildUploadArea() {
@@ -359,13 +358,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ? Stack(
                 children: [
                   ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(_proofImage!, fit: BoxFit.cover, width: double.infinity)),
-                  Positioned(
+                  const Positioned(
                     right: 8, top: 8,
                     child: CircleAvatar(backgroundColor: Colors.green, radius: 12, child: Icon(Icons.check, size: 14, color: Colors.white)),
                   )
                 ],
               )
-            : Column(
+            : const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.file_upload, color: Colors.indigo, size: 36),
@@ -382,7 +381,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return SizedBox(
       width: double.infinity,
       child: _isProcessing
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : ElevatedButton(
               onPressed: _proofImage == null ? null : _confirmPayment,
               style: ElevatedButton.styleFrom(
@@ -390,12 +389,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: Colors.grey[200],
                 disabledForegroundColor: Colors.grey[400],
-                padding: EdgeInsets.symmetric(vertical: 20),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 elevation: _proofImage == null ? 0 : 8,
                 shadowColor: Colors.indigo.withOpacity(0.4)
               ),
-              child: Text('VERIFY PAYMENT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              child: const Text('VERIFY PAYMENT', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
             ),
     );
   }
@@ -403,7 +402,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildTrustFooter() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.lock_outline, size: 14, color: Colors.grey),
@@ -411,7 +410,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             Text('🔒 Secure Payment • Powered by UPI', style: TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text('Refer to our Refund Policy in Help section.', style: TextStyle(color: Colors.grey[400], fontSize: 10)),
       ],
     );

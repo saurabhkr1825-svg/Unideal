@@ -17,10 +17,12 @@ void main() async {
     anonKey: 'sb_publishable_5EPrVD9AJ78Wgc0Mqp-XHw_y9YtLsX-',
   );
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -34,7 +36,7 @@ class MyApp extends StatelessWidget {
         title: 'Unideal',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.themeData,
-        home: SplashScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

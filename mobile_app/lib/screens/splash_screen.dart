@@ -5,6 +5,8 @@ import 'login_screen.dart';
 import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -20,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       // Wait for auth check with a reasonable timeout
-      await auth.tryAutoLogin().timeout(Duration(seconds: 10));
+      await auth.tryAutoLogin().timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint("Auth check failed or timed out: $e");
     } finally {
@@ -28,11 +30,11 @@ class _SplashScreenState extends State<SplashScreen> {
         final auth = Provider.of<AuthProvider>(context, listen: false);
         if (auth.isAuthenticated) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => HomeScreen()),
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
           );
         } else {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => LoginScreen()),
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
           );
         }
       }
@@ -50,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

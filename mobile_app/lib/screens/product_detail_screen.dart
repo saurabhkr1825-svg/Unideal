@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../models/product_model.dart';
 import '../providers/product_provider.dart';
 import '../providers/auth_provider.dart';
-import 'payment_screen.dart';
 import 'chat_detail_screen.dart';
 import 'membership_screen.dart';
 import '../services/supabase_auth_service.dart';
@@ -12,6 +11,7 @@ import '../utils/app_theme.dart';
 import '../widgets/custom_buttons.dart';
 import '../widgets/item_badge.dart';
 import '../services/supabase_claim_service.dart';
+import '../services/supabase_purchase_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -26,24 +26,111 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Future<void> _handleBuy(BuildContext context, {double? overridePrice}) async {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please login to continue')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please login to continue')));
       return;
     }
 
-    try {
-      // For donations, we update availability after successful payment intent
-      // For now, we navigate to payment
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PaymentScreen(product: widget.product, type: 'buy', finalPriceOverride: overridePrice),
+    _showPurchaseRequestDialog(context);
+  }
+
+  void _showPurchaseRequestDialog(BuildContext context) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user!;
+    final hostelController = TextEditingController();
+    final roomNoController = TextEditingController();
+    final meetingPointController = TextEditingController();
+    final phoneController = TextEditingController(text: user.phone ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Buy Request', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('Request to buy "${widget.product.title}" for ₹${widget.product.price.toStringAsFixed(0)}', 
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+              const SizedBox(height: 20),
+              
+              TextField(
+                controller: hostelController,
+                decoration: const InputDecoration(labelText: 'Hostel Name (e.g. Aryabhatt)', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: roomNoController,
+                decoration: const InputDecoration(labelText: 'Room No (e.g. 203)', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: meetingPointController,
+                decoration: const InputDecoration(labelText: 'Meeting Point (e.g. Hostel Gate)', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Contact No (Optional)', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: PrimaryButton(
+                  onPressed: () async {
+                    if (hostelController.text.isEmpty || roomNoController.text.isEmpty || meetingPointController.text.isEmpty) {
+                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill Hostel, Room, and Meeting Point.')));
+                       return;
+                    }
+
+                    Navigator.pop(ctx);
+                    try {
+                      await SupabasePurchaseService().submitPurchaseRequest(
+                        productId: widget.product.id,
+                        buyerId: user.id,
+                        sellerId: widget.product.donorId,
+                        hostelName: hostelController.text,
+                        roomNo: roomNoController.text,
+                        meetingPoint: meetingPointController.text,
+                        phone: phoneController.text.isNotEmpty ? phoneController.text : null,
+                      );
+                      
+                      // Notification to user
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Purchase request sent! Seller will accept/reject.'), 
+                        backgroundColor: Colors.green
+                      ));
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(e.toString().replaceAll('Exception: ', '')), 
+                        backgroundColor: Colors.red
+                      ));
+                    }
+                  },
+                  icon: Icons.send_rounded,
+                  text: 'SEND REQUEST',
+                ),
+              ),
+            ],
+          ),
         ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceAll('Exception: ', '')),
-        backgroundColor: Colors.red,
-      ));
-    }
+      ),
+    );
   }
 
   @override
@@ -53,10 +140,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.product.title, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text(widget.product.title, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -69,25 +156,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 height: 350,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: Offset(0, 5))
+                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
                   child: widget.product.imageUrl != null
                       ? Image.network(
                           widget.product.imageUrl!,
                           fit: BoxFit.cover,
                           errorBuilder: (ctx, err, _) => Container(
                             color: Colors.grey[100], 
-                            child: Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey))
+                            child: const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey))
                           ),
                         )
                       : Container(
                           color: Colors.grey[100],
-                          child: Center(child: Icon(Icons.image_not_supported, size: 60, color: Colors.grey)),
+                          child: const Center(child: Icon(Icons.image_not_supported, size: 60, color: Colors.grey)),
                        ),
                 ),
               ),
@@ -104,18 +191,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       _buildBadge(),
                       Text(
                         'Category: ${widget.product.category}',
-                        style: TextStyle(color: Colors.indigo, fontStyle: FontStyle.italic),
+                        style: const TextStyle(color: Colors.indigo, fontStyle: FontStyle.italic),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
                           widget.product.title,
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
                         ),
                       ),
                       if (widget.product.price > 0 && !widget.product.isAuction)
@@ -130,12 +217,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     widget.product.description,
                     style: TextStyle(fontSize: 16, color: Colors.grey[700], height: 1.5),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   
                   if (widget.product.isAuction)
                     _buildAuctionStream(context),
@@ -144,13 +231,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   if (widget.product.status == 'pending_approval')
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.orange[50], 
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(color: Colors.orange.withOpacity(0.3))
                       ),
-                      child: Column(
+                      child: const Column(
                         children: [
                           Icon(Icons.hourglass_empty, color: Colors.orange, size: 30),
                           SizedBox(height: 8),
@@ -168,14 +255,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           String userName = 'Donor';
 
                           // If donor is missing or null, route to Admin
-                          if (chatUserId == null || chatUserId.isEmpty) {
+                          if (chatUserId.isEmpty) {
                              final adminId = await SupabaseAuthService().getAdminId();
                              if (adminId != null) {
                                chatUserId = adminId;
                                userName = 'Admin';
                              } else {
                                if (mounted) {
-                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Support is currently unavailable.')));
+                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Support is currently unavailable.')));
                                }
                                return;
                              }
@@ -196,7 +283,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                        text: 'Chat with Donor',
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
                   if (widget.product.isAvailable)
                   Column(
@@ -220,7 +307,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   else if (widget.product.status == 'sold')
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.grey[200], 
                         borderRadius: BorderRadius.circular(15),
@@ -229,7 +316,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: Column(
                         children: [
                           Icon(Icons.check_circle, color: Colors.grey[700], size: 30),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text('THIS ITEM HAS BEEN SOLD', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold, fontSize: 16)),
                         ],
                       ),
@@ -237,13 +324,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   else
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.red[50], 
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(color: Colors.red.withOpacity(0.3))
                       ),
-                      child: Column(
+                      child: const Column(
                         children: [
                           Icon(Icons.lock_clock, color: Colors.red, size: 30),
                           SizedBox(height: 8),
@@ -252,7 +339,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
@@ -267,7 +354,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       stream: Provider.of<AuctionProvider>(context, listen: false).getAuctionStream(widget.product.id),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         
         final auctionData = snapshot.data!.first;
@@ -290,8 +377,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: EdgeInsets.all(16),
-              margin: EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(15),
@@ -322,7 +409,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ],
                   ),
                   if (!isEnded) ...[
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: PrimaryButton(
@@ -332,7 +419,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ] else if (auctionData['winner_id'] != null && Provider.of<AuthProvider>(context, listen: false).user?.id == auctionData['winner_id']) ...[
-                     SizedBox(height: 20),
+                     const SizedBox(height: 20),
                      SizedBox(
                       width: double.infinity,
                       child: PrimaryButton(
@@ -357,8 +444,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       stream: Provider.of<AuctionProvider>(context, listen: false).getBidsStream(auctionId),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 8.0, bottom: 20),
+          return const Padding(
+            padding: EdgeInsets.only(top: 8.0, bottom: 20),
             child: Text('No bids yet. Be the first!', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
           );
         }
@@ -367,11 +454,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Recent Bids (${bids.length})', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
+            Text('Recent Bids (${bids.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
             ListView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: bids.length > 5 ? 5 : bids.length,
               itemBuilder: (ctx, i) {
                 final bid = bids[i];
@@ -380,13 +467,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(backgroundColor: Colors.grey[200], child: Icon(Icons.person, color: Colors.grey)),
+                  leading: CircleAvatar(backgroundColor: Colors.grey[200], child: const Icon(Icons.person, color: Colors.grey)),
                   title: Text('₹${amt.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[700])),
                   subtitle: Text('${time.hour}:${time.minute.toString().padLeft(2, '0')} - Bidder ${bid['bidder_id'].toString().substring(0, 4)}'),
                 );
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         );
       },
@@ -394,23 +481,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _showBidDialog(BuildContext context, String auctionId, double currentPrice) {
-    final TextEditingController _bidController = TextEditingController();
+    final TextEditingController bidController = TextEditingController();
     final double minBid = currentPrice + 50;
-    _bidController.text = minBid.toStringAsFixed(0);
+    bidController.text = minBid.toStringAsFixed(0);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Place Your Bid'),
+        title: const Text('Place Your Bid'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Minimum next bid: ₹$minBid'),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
-              controller: _bidController,
+              controller: bidController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Bid Amount',
                 prefixText: '₹ ',
                 border: OutlineInputBorder(),
@@ -419,10 +506,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              final val = double.tryParse(_bidController.text);
+              final val = double.tryParse(bidController.text);
               if (val == null || val < minBid) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Bid must be at least ₹$minBid')));
                 return;
@@ -430,7 +517,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               Navigator.pop(ctx);
               final user = Provider.of<AuthProvider>(context, listen: false).user;
               if (user == null) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please login')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please login')));
                 return;
               }
               try {
@@ -440,13 +527,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   bidAmount: val,
                   minimumIncrement: 50.0,
                 );
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Bid placed successfully!'), backgroundColor: Colors.green));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bid placed successfully!'), backgroundColor: Colors.green));
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red));
               }
             },
-            child: Text('Confirm Bid'),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white),
+            child: const Text('Confirm Bid'),
           ),
         ],
       ),
@@ -458,8 +545,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: EdgeInsets.all(32),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.all(32),
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
@@ -467,46 +554,46 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: Colors.amber[50], shape: BoxShape.circle),
-              child: Icon(Icons.stars_rounded, color: Colors.amber, size: 40),
+              child: const Icon(Icons.stars_rounded, color: Colors.amber, size: 40),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Premium Only Feature',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Direct chat with donors is exclusive to Premium Members. Upgrade now to start saving lives.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600], fontSize: 15, height: 1.4),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => MembershipScreen()));
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MembershipScreen()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   elevation: 5,
                   shadowColor: Colors.indigo.withOpacity(0.3),
                 ),
-                child: Text('UPGRADE TO PREMIUM', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+                child: const Text('UPGRADE TO PREMIUM', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Maybe Later', style: TextStyle(color: Colors.grey)),
+              child: const Text('Maybe Later', style: TextStyle(color: Colors.grey)),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -516,14 +603,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void _showClaimDialog(BuildContext context) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please login')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please login')));
       return;
     }
 
-    final _nameController = TextEditingController(text: user.fullName);
-    final _phoneController = TextEditingController(text: user.phone ?? '');
-    final _reasonController = TextEditingController();
-    final _timeController = TextEditingController();
+    final nameController = TextEditingController(text: user.fullName);
+    final phoneController = TextEditingController(text: user.phone ?? '');
+    final reasonController = TextEditingController();
+    final timeController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -532,8 +619,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
-          padding: EdgeInsets.all(24),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
@@ -544,39 +631,39 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Claim Item', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  IconButton(icon: Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  const Text('Claim Item', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
                TextField(
-                controller: _phoneController,
+                controller: phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder()),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
                TextField(
-                controller: _reasonController,
+                controller: reasonController,
                 maxLines: 2,
-                decoration: InputDecoration(labelText: 'Pickup Reason (Optional)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Pickup Reason (Optional)', border: OutlineInputBorder()),
               ),
-               SizedBox(height: 12),
+               const SizedBox(height: 12),
                TextField(
-                controller: _timeController,
-                decoration: InputDecoration(labelText: 'Pickup Time Preference (e.g. 5-7 PM)', border: OutlineInputBorder()),
+                controller: timeController,
+                decoration: const InputDecoration(labelText: 'Pickup Time Preference (e.g. 5-7 PM)', border: OutlineInputBorder()),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: PrimaryButton(
                   onPressed: () async {
-                    if (_nameController.text.isEmpty || _phoneController.text.isEmpty || _timeController.text.isEmpty) {
-                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all required fields.')));
+                    if (nameController.text.isEmpty || phoneController.text.isEmpty || timeController.text.isEmpty) {
+                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all required fields.')));
                        return;
                     }
 
@@ -585,14 +672,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       await SupabaseClaimService().submitClaim(
                         itemId: widget.product.id,
                         userId: user.id,
-                        name: _nameController.text,
-                        phone: _phoneController.text,
-                        pickupReason: _reasonController.text.isNotEmpty ? _reasonController.text : null,
-                        pickupTimePreference: _timeController.text,
+                        name: nameController.text,
+                        phone: phoneController.text,
+                        pickupReason: reasonController.text.isNotEmpty ? reasonController.text : null,
+                        pickupTimePreference: timeController.text,
                       );
                       // Update UI state
                       Provider.of<ProductProvider>(context, listen: false).updateProductStatus(widget.product.id, 'pending_approval');
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Claim request submitted successfully!'), backgroundColor: Colors.green));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Claim request submitted successfully!'), backgroundColor: Colors.green));
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red));
                     }

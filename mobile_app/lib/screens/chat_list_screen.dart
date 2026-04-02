@@ -3,9 +3,10 @@ import 'package:intl/intl.dart';
 import '../services/supabase_chat_service.dart';
 import '../models/chat_model.dart';
 import 'chat_detail_screen.dart';
-import 'search_user_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
+  const ChatListScreen({super.key});
+
   @override
   _ChatListScreenState createState() => _ChatListScreenState();
 }

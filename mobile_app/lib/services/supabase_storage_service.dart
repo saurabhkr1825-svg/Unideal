@@ -7,7 +7,7 @@ class SupabaseStorageService {
   Future<String> uploadDonationImage(File imageFile) async {
     try {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${imageFile.path.split('/').last}';
-      final path = '$fileName';
+      final path = fileName;
 
       await _client.storage.from('donations').upload(
         path,

@@ -1,15 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import '../providers/auth_provider.dart';
-import '../providers/transaction_provider.dart';
 import '../utils/constants.dart';
 import '../services/supabase_membership_service.dart';
 import 'home_screen.dart';
 
 class MembershipScreen extends StatefulWidget {
+  const MembershipScreen({super.key});
+
   @override
   _MembershipScreenState createState() => _MembershipScreenState();
 }
@@ -32,11 +31,11 @@ class _MembershipScreenState extends State<MembershipScreen> {
 
   Future<void> _submitRequest() async {
     if (_screenshot == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please upload a screenshot')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a screenshot')));
       return;
     }
     if (_txnController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter Transaction ID')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter Transaction ID')));
       return;
     }
 
@@ -50,14 +49,14 @@ class _MembershipScreenState extends State<MembershipScreen> {
         screenshot: _screenshot!,
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Membership Request Submitted! ✅\nOur team is verifying your payment. It usually takes 2-4 hours.'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 5),
         ),
       );
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     } catch (e) {
@@ -72,10 +71,10 @@ class _MembershipScreenState extends State<MembershipScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Membership Plan', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('Membership Plan', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -83,30 +82,30 @@ class _MembershipScreenState extends State<MembershipScreen> {
             // Hero Gradient Header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 40),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.indigo[900]!, Colors.purple[700]!],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-                boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 20, offset: Offset(0, 10))],
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
+                boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
               ),
               child: Column(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    child: Icon(Icons.stars_rounded, color: Colors.amber, size: 60),
+                    child: const Icon(Icons.stars_rounded, color: Colors.amber, size: 60),
                   ),
-                  SizedBox(height: 20),
-                  Text('UNIDEAL PREMIUM', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 2)),
-                  SizedBox(height: 10),
-                  Text('Unlock the power to save lives and connect with donors directly.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 16)),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 20),
+                  const Text('UNIDEAL PREMIUM', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 2)),
+                  const SizedBox(height: 10),
+                  const Text('Unlock the power to save lives and connect with donors directly.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 16)),
+                  const SizedBox(height: 30),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -129,11 +128,11 @@ class _MembershipScreenState extends State<MembershipScreen> {
                   _buildBenefitItem(Icons.verified_user_rounded, 'Priority Badge', 'Get a verified badge on your profile.'),
                   _buildBenefitItem(Icons.history_edu_rounded, 'Early Access', 'Be the first to see high-value donation items.'),
                   
-                  SizedBox(height: 40),
-                  Text('Scan to Pay via UPI', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 40),
+                  const Text('Scan to Pay via UPI', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const SizedBox(height: 20),
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.indigo.withOpacity(0.1)),
                       borderRadius: BorderRadius.circular(25),
@@ -146,11 +145,11 @@ class _MembershipScreenState extends State<MembershipScreen> {
                       size: 200.0,
                     ),
                   ),
-                  SizedBox(height: 32),
-                  Divider(),
-                  SizedBox(height: 16),
-                  Text('Step 2: Upload Proof', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  const Text('Step 2: Upload Proof', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _txnController,
                     decoration: InputDecoration(
@@ -158,7 +157,7 @@ class _MembershipScreenState extends State<MembershipScreen> {
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
@@ -173,8 +172,8 @@ class _MembershipScreenState extends State<MembershipScreen> {
                           ? Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.add_a_photo, color: Colors.indigo, size: 40),
-                                SizedBox(height: 8),
+                                const Icon(Icons.add_a_photo, color: Colors.indigo, size: 40),
+                                const SizedBox(height: 8),
                                 Text('Upload Payment Screenshot', style: TextStyle(color: Colors.grey[600])),
                               ],
                             )
@@ -184,27 +183,27 @@ class _MembershipScreenState extends State<MembershipScreen> {
                             ),
                     ),
                   ),
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     child: _isSubmitting
-                        ? Center(child: CircularProgressIndicator())
+                        ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
                             onPressed: _submitRequest,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.indigo,
                               foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 20),
+                              padding: const EdgeInsets.symmetric(vertical: 20),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                               elevation: 8,
                               shadowColor: Colors.indigo.withOpacity(0.4)
                             ),
-                            child: Text('SUBMIT PROOF', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.1)),
+                            child: const Text('SUBMIT PROOF', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.1)),
                           ),
                   ),
-                  SizedBox(height: 20),
-                  Text('Payments are manually verified by our team.', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 20),
+                  const Text('Payments are manually verified by our team.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -220,13 +219,13 @@ class _MembershipScreenState extends State<MembershipScreen> {
       child: Row(
         children: [
           CircleAvatar(backgroundColor: Colors.indigo[50], child: Icon(icon, color: Colors.indigo, size: 20)),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),
           )

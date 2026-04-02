@@ -77,7 +77,7 @@ class SupabaseMembershipService {
       // 2. If approved, update user's profile to membership_status = true
       if (status == 'approved') {
         // Set expiry to 30 days from now
-        final expiryDate = DateTime.now().add(Duration(days: 30)).toIso8601String();
+        final expiryDate = DateTime.now().add(const Duration(days: 30)).toIso8601String();
         
         await _client.from('profiles').update({
           'membership_status': true,
