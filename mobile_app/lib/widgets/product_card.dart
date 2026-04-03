@@ -28,99 +28,124 @@ class _ProductCardState extends State<ProductCard> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: 200.ms,
-        transform: _isHovered ? Matrix4.translationValues(0, -8, 0) : Matrix4.identity(),
-        child: ClickableStandardCard(
-          onTap: widget.onTap,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          transform: _isHovered ? Matrix4.translationValues(0, -8, 0) : Matrix4.identity(),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: _isHovered ? 12 : 8,
+                color: Colors.black12,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                children: [
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: widget.product.imageUrl != null
-                        ? Image.network(
-                            widget.product.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (c, e, s) => Container(
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.image),
-                            ),
-                          )
-                        : Container(
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image),
-                          ),
-                  ),
-                  Positioned(
-                    top: AppTheme.spacingSm,
-                    left: AppTheme.spacingSm,
-                    child: _buildBadge(),
-                  ),
-                  if (_isHovered)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black.withOpacity(0.4),
-                        child: Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildHoverAction(Icons.visibility),
-                              const SizedBox(width: 8),
-                              _buildHoverAction(Icons.favorite_border),
-                              const SizedBox(width: 8),
-                              _buildHoverAction(Icons.shopping_cart_outlined),
-                            ],
-                          ).animate().fadeIn(duration: 200.ms).scale(begin: const Offset(0.8, 0.8)),
-                        ),
+              /// 🔹 IMAGE
+              Expanded(
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: widget.product.imageUrl != null
+                            ? Image.network(
+                                widget.product.imageUrl!,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Container(
+                                  color: Colors.grey[100],
+                                  child: const Icon(Icons.image, color: Colors.grey),
+                                ),
+                              )
+                            : Container(
+                                color: Colors.grey[100],
+                                child: const Icon(Icons.image, color: Colors.grey),
+                              ),
                       ),
                     ),
-                ],
+
+                    /// 🔹 BADGE (User's Style)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: _buildBadge(),
+                    ),
+
+                    /// 🔹 HOVER OVERLAY
+                    if (_isHovered)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.4),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                          ),
+                          child: Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildHoverAction(Icons.visibility),
+                                const SizedBox(width: 8),
+                                _buildHoverAction(Icons.favorite_border),
+                                const SizedBox(width: 8),
+                                _buildHoverAction(Icons.shopping_cart_outlined),
+                              ],
+                            ).animate().fadeIn(duration: 200.ms).scale(begin: const Offset(0.8, 0.8)),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
+
+              /// 🔹 DETAILS
               Padding(
-                padding: const EdgeInsets.all(AppTheme.spacingMd),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    /// Title
                     Text(
                       widget.product.title,
-                      style: AppTheme.bodyStyle.copyWith(fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
-                    const SizedBox(height: AppTheme.spacingXs),
+
+                    const SizedBox(height: 4),
+
+                    /// Category
                     Text(
                       widget.product.category,
-                      style: AppTheme.smallInfoStyle.copyWith(
-                        color: AppTheme.primaryColor, 
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                    const SizedBox(height: AppTheme.spacingSm),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          widget.product.price > 0 ? '₹${widget.product.price.toStringAsFixed(0)}' : 'FREE',
-                          style: AppTheme.priceStyle.copyWith(
-                            color: widget.product.price > 0 ? AppTheme.textPrimaryColor : AppTheme.primaryColor,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textSecondaryColor),
-                      ],
+
+                    const SizedBox(height: 8),
+
+                    /// Price
+                    Text(
+                      widget.product.price == 0 ? "FREE" : "₹${widget.product.price.toStringAsFixed(0)}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: widget.product.price == 0 ? Colors.green : Colors.indigo,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-        ).animate().fadeIn(duration: 400.ms),
+        ),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms);
   }
 
   Widget _buildHoverAction(IconData icon) {
@@ -135,18 +160,37 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Widget _buildBadge() {
+    // Using User's badge style for the containers but keeping my status logic
+    String label = "AVAILABLE";
+    Color color = Colors.green;
+
     if (widget.product.status == 'sold') {
-      return ItemBadge.sold();
+      label = "SOLD";
+      color = Colors.red;
     } else if (widget.product.status == 'pending_approval') {
-      return ItemBadge.pendingClaim();
-    } else if (!widget.product.isAvailable) {
-       return ItemBadge.claimed();
+      label = "PENDING";
+      color = Colors.orange;
     } else if (widget.product.isAuction) {
-      return ItemBadge.auction();
+      label = "AUCTION";
+      color = Colors.indigo;
     } else if (widget.product.price > 0) {
-      return ItemBadge.forSale();
+      label = "FOR SALE";
+      color = Colors.blue;
     } else {
-      return ItemBadge.available();
+      label = "FREE";
+      color = Colors.green;
     }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+    );
   }
 }

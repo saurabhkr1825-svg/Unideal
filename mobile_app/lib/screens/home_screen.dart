@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
+import '../utils/app_theme.dart';
 import 'product_detail_screen.dart';
 import 'sell_item_screen.dart';
 import 'login_screen.dart';
@@ -459,123 +460,27 @@ class _BrowseTabState extends State<BrowseTab> {
     );
   }
 
+  int getCrossAxisCount(double width) {
+    if (width > 1200) return 4;
+    if (width > 900) return 3;
+    if (width > 600) return 2;
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final isDesktop = width > 800;
-        
-        // Breakpoints for Grid
-        int crossAxisCount = 1;
-        if (width > 1200) {
-          crossAxisCount = 4;
-        } else if (width > 800) {
-          crossAxisCount = 3;
-        } else if (width > 500) {
-          crossAxisCount = 2;
-        }
+        final isDesktop = width > 900;
 
         return Center(
-          child: SizedBox(
-            maxWidth: 1300,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1300),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Premium Search & Filter Bar
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (val) {
-                              setState(() => _searchQuery = val);
-                              _applyFilters();
-                            },
-                            decoration: const InputDecoration(
-                              hintText: 'Search for books, electronics, and more...',
-                              prefixIcon: Icon(Icons.search, color: Colors.indigo, size: 20),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 14),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (isDesktop) const SizedBox(width: 16),
-                      if (isDesktop) _buildNotificationIconDark(),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () => _showFilterBottomSheet(),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.indigo,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.tune, color: Colors.white, size: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Quick ItemType Chips Row
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      _buildCleanTypeChip('All', null),
-                      _buildCleanTypeChip('Donations', 'donate'),
-                      _buildCleanTypeChip('Auctions', 'auction'),
-                      _buildCleanTypeChip('Selling', 'sale'),
-                    ],
-                  ),
-                ),
-                
-                // Category Chips Row
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Row(
-                    children: _categories.map((cat) {
-                      final isSelected = _selectedCategory == cat;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() => _selectedCategory = cat);
-                          _applyFilters();
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? Colors.indigo : Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: isSelected ? Colors.indigo : Colors.grey.shade200),
-                          ),
-                          child: Text(
-                            cat,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.grey[700],
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-
+                _buildTopBar(isDesktop),
                 Expanded(
                   child: Consumer<ProductProvider>(
                     builder: (context, productProvider, _) {
@@ -584,22 +489,21 @@ class _BrowseTabState extends State<BrowseTab> {
                       }
 
                       final products = productProvider.products;
-                      
                       if (products.isEmpty) {
                         return _buildNoResultsPlaceholder();
                       }
 
                       return GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
+                          crossAxisCount: getCrossAxisCount(width),
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
                           childAspectRatio: 0.72,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
                         ),
                         itemCount: products.length,
-                        itemBuilder: (ctx, i) {
-                          final product = products[i];
+                        itemBuilder: (context, index) {
+                          final product = products[index];
                           return ProductCard(
                             product: product,
                             onTap: () {
@@ -616,6 +520,153 @@ class _BrowseTabState extends State<BrowseTab> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTopBar(bool isDesktop) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() => _searchQuery = val);
+                    _applyFilters();
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Search items...",
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+              if (isDesktop) const SizedBox(width: 16),
+              if (isDesktop) _buildNotificationIconDark(),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () => _showFilterBottomSheet(),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Icon(Icons.tune, color: Colors.white, size: 20),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip("All", null),
+                const SizedBox(width: 8),
+                _buildFilterChip("Donations", 'donate'),
+                const SizedBox(width: 8),
+                _buildFilterChip("Auctions", 'auction'),
+                const SizedBox(width: 8),
+                _buildFilterChip("Selling", 'sale'),
+                const SizedBox(width: 16),
+                Container(width: 1, height: 24, color: Colors.grey.shade300),
+                const SizedBox(width: 16),
+                ..._categories.map((cat) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _buildCategoryChip(cat),
+                )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String? typeValue) {
+    final isSelected = _itemType == typeValue;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _itemType = typeValue);
+        _applyFilters();
+      },
+      child: Chip(
+        label: Text(label),
+        backgroundColor: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.grey.shade100,
+        labelStyle: TextStyle(
+          color: isSelected ? AppTheme.primaryColor : Colors.black87,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        side: BorderSide.none,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String cat) {
+    final isSelected = _selectedCategory == cat;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedCategory = cat);
+        _applyFilters();
+      },
+      child: Chip(
+        label: Text(cat),
+        backgroundColor: isSelected ? Colors.indigo.shade50 : Colors.grey.shade100,
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.indigo : Colors.black87,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        side: BorderSide.none,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+  }
+
+  Widget _buildNotificationIconDark() {
+    return StreamBuilder<List<NotificationModel>>(
+      stream: SupabaseNotificationService().getNotificationStream(),
+      builder: (context, snapshot) {
+        final unreadCount = snapshot.data?.where((n) => !n.isRead).length ?? 0;
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: Icon(Icons.notifications_none_rounded, color: Colors.indigo[900], size: 28),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    '$unreadCount',
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );
