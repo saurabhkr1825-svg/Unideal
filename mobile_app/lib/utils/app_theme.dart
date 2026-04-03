@@ -9,6 +9,8 @@ class AppTheme {
   static const double spacingXl = 32.0;
 
   // borderRadius
+  static const double radiusXs = 4.0;
+  static const double radiusS = 8.0;
   static const double radiusM = 12.0;
   static const double radiusL = 20.0;
 
